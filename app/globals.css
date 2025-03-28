@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 180 33% 97%;
+    --foreground: 240 43% 9%;
+
+    --card: 180 33% 97%;
+    --card-foreground: 240 43% 9%;
+
+    --popover: 180 33% 97%;
+    --popover-foreground: 240 43% 9%;
+
+    --accent: 18 79% 77%;
+    --accent-foreground: 240 43% 9%;
+
+    --secondary: 264 15% 50%;
+    --secondary-foreground: 180 33% 97%;
+
+    --muted: 180 33% 97%;
+    --muted-foreground: 264 15% 50%;
+
+    --primary: 36 100% 58%;
+    --primary-foreground: 240 43% 9%;
+
+    --destructive: 36 100% 58%;
+    --destructive-foreground: 240 43% 9%;
+
+    --border: 264 15% 50%;
+    --input: 264 15% 50%;
+    --ring: 18 79% 77%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-merriweather;
+  }
+
+  h1 {
+    @apply text-heading-1;
+  }
+
+  h2 {
+    @apply text-heading-2;
+  }
+
+  h3 {
+    @apply text-heading-3;
+  }
+
+  h4 {
+    @apply text-heading-4;
+  }
+
+  p {
+    @apply text-paragraph-1 mb-paragraph;
+  }
+
+  small {
+    @apply text-paragraph-2;
+  }
+}
+
+@layer components {
+  /* Button styles */
+  .btn-primary {
+    @apply bg-primary text-primary-foreground text-button uppercase py-3 px-6 rounded-lg shadow-button transition-all hover:shadow-lg hover:translate-y-[-2px] active:translate-y-0 active:shadow-button;
+  }
+
+  .btn-secondary {
+    @apply bg-transparent border-2 border-primary text-primary text-button uppercase py-3 px-6 rounded-lg shadow-button transition-all hover:shadow-lg hover:translate-y-[-2px] active:translate-y-0 active:shadow-button;
+  }
+
+  /* Form styles */
+  .form-input {
+    @apply border border-input px-3 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-ring;
+  }
+
+  .form-label {
+    @apply text-paragraph-2 text-foreground mb-2 block;
+  }
+
+  .form-error {
+    @apply text-sm text-destructive mt-1;
+  }
+
+  /* Link styles */
+  .link {
+    @apply text-link text-primary underline underline-offset-4 hover:text-secondary transition-colors;
+  }
+
+  /* Card styles */
+  .card {
+    @apply bg-card text-card-foreground rounded-lg shadow-card p-6;
+  }
+
+  /* Section spacing */
+  .section {
+    @apply py-section;
+  }
+}
