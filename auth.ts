@@ -2,26 +2,16 @@ import NextAuth from "next-auth";
 import { FirestoreAdapter } from "@auth/firebase-adapter";
 import { cert } from "firebase-admin/app";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+} from "firebase/auth";
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 import type { User as FirebaseUser } from "firebase/auth";
 import { auth, db } from "./lib/firebase";
-
-// Check server time synchronization
-const checkServerTime = () => {
-  const serverTime = new Date();
-  const realTime = new Date();
-  const timeDiff = Math.abs(serverTime.getTime() - realTime.getTime());
-
-  if (timeDiff > 60000) {
-    // More than 1 minute difference
-    console.warn(
-      `Server time is ${timeDiff / 1000} seconds off from real time`
-    );
-    console.warn("Please ensure NTP is properly configured and running");
-  }
-};
+import { createHederaAccount, encryptPrivateKey } from "@/lib/hedera";
 
 export type UserRole = "user" | "admin" | "delivery";
 
@@ -55,6 +45,9 @@ export const {
         token.role = (user as { role?: UserRole }).role || "user";
         token.id = user.id;
         token.email = user.email;
+        token.name = user.name;
+        token.hederaAccountId = user.hederaAccountId;
+        token.hederaPublicKey = user.hederaPublicKey;
       }
       return token;
     },
@@ -62,6 +55,9 @@ export const {
       if (session?.user) {
         session.user.role = token.role as UserRole;
         session.user.id = token.id as string;
+        session.user.name = token.name as string;
+        session.user.hederaAccountId = token.hederaAccountId as string;
+        session.user.hederaPublicKey = token.hederaPublicKey as string;
       }
       return session;
     },
@@ -72,6 +68,8 @@ export const {
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        role: { label: "Role", type: "text" },
+        name: { label: "Name", type: "text" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -79,15 +77,46 @@ export const {
         }
 
         try {
-          const userCredential = await signInWithEmailAndPassword(
-            auth,
-            credentials.email as string,
-            credentials.password as string
-          );
+          let userCredential;
+
+          // Check if this is a new account creation
+          if (
+            credentials.role &&
+            credentials.name &&
+            ["admin", "delivery"].includes(credentials.role as string)
+          ) {
+            // Create new user
+            userCredential = await createUserWithEmailAndPassword(
+              auth,
+              credentials.email as string,
+              credentials.password as string
+            );
+
+            // Create Hedera account for admin/delivery roles
+            const hederaAccount = await createHederaAccount();
+            console.log("Created Hedera account:", hederaAccount); // Debug log
+
+            // Store user data in Firestore with Hedera info
+            await setDoc(doc(db, "users", userCredential.user.uid), {
+              name: credentials.name || "",
+              email: credentials.email,
+              role: credentials.role,
+              hederaAccountId: hederaAccount.accountId,
+              hederaPublicKey: hederaAccount.publicKey,
+              hederaPrivateKey: encryptPrivateKey(hederaAccount.privateKey),
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            });
+          } else {
+            userCredential = await signInWithEmailAndPassword(
+              auth,
+              credentials.email as string,
+              credentials.password as string
+            );
+          }
 
           const user = userCredential.user;
 
-          // Get user data from Firestore including role
           const userDocRef = doc(db, "users", user.uid);
           const userDoc = await getDoc(userDocRef);
           const userData = userDoc.data();
@@ -96,13 +125,20 @@ export const {
             throw new Error("User data not found");
           }
 
+          // Return all necessary user data including Hedera information
           return {
             id: user.uid,
             email: user.email || "",
             role: (userData.role as UserRole) || "user",
+            hederaAccountId: userData.hederaAccountId,
+            hederaPublicKey: userData.hederaPublicKey,
+            name: userData.name || "",
           };
         } catch (error) {
           console.error("Authentication error:", error);
+          if (error instanceof Error && error.message.includes("Hedera")) {
+            throw new Error("Failed to create Hedera account");
+          }
           throw new Error("Invalid credentials");
         }
       },
@@ -116,12 +152,18 @@ export const {
 declare module "next-auth" {
   interface User {
     role?: UserRole;
+    hederaAccountId?: string;
+    hederaPublicKey?: string;
+    name?: string | null;
   }
 
   interface Session {
     user: User & {
-      role?: UserRole;
+      role: UserRole;
       id: string;
+      name: string;
+      hederaAccountId: string;
+      hederaPublicKey: string;
     };
   }
 }

@@ -2,9 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { getFirestore, doc, setDoc } from "firebase/firestore";
-import { initializeApp } from "firebase/app";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +16,6 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
-import { auth, db } from "@/lib/firebase";
 
 export default function SignUp() {
   const [email, setEmail] = useState("");
@@ -35,36 +31,31 @@ export default function SignUp() {
     setError("");
 
     try {
-      // Create user in Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-
-      const user = userCredential.user;
-
-      // Store additional user data in Firestore
-      await setDoc(doc(db, "users", user.uid), {
-        email,
-        role,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          role,
+        }),
       });
 
-      // Redirect to sign in page after successful registration
-      router.push("/auth/signin");
-    } catch (error: any) {
-      console.error("Signup error:", error);
-      if (error.code === "auth/email-already-in-use") {
-        setError("This email is already registered. Please sign in instead.");
-      } else if (error.code === "auth/weak-password") {
-        setError("Password should be at least 6 characters long.");
-      } else if (error.code === "auth/invalid-email") {
-        setError("Invalid email address.");
-      } else {
-        setError(error.message || "An error occurred during sign up");
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create account");
       }
+
+      router.push("/auth/signin");
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "An error occurred during sign up"
+      );
     } finally {
       setIsLoading(false);
     }

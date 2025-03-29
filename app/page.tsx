@@ -19,6 +19,7 @@ import { Search, ShoppingBag, Truck, Shield, ArrowRight } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { Header } from "@/components/header";
 import Footer from "@/components/landing/footer";
+import { createHederaAccount } from "@/lib/hedera";
 
 export default function HomePage() {
   const { products, isLoading, fetchProducts } = useProductsStore();
@@ -26,6 +27,14 @@ export default function HomePage() {
   const [sortBy, setSortBy] = useState("name-asc");
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const { user } = useAuth();
+  const [isCreating, setIsCreating] = useState(false);
+  const [hederaResult, setHederaResult] = useState<{
+    success: boolean;
+    data?: any;
+    error?: string;
+  }>({
+    success: false,
+  });
 
   useEffect(() => {
     fetchProducts();
@@ -63,6 +72,31 @@ export default function HomePage() {
       setFilteredProducts(filtered);
     }
   }, [products, searchTerm, sortBy]);
+
+  const handleCreateHederaAccount = async () => {
+    setIsCreating(true);
+    setHederaResult({ success: false });
+
+    try {
+      const account = await createHederaAccount();
+      console.log("Hedera Account Created:", account);
+      setHederaResult({
+        success: true,
+        data: account,
+      });
+    } catch (error) {
+      console.error("Hedera Account Creation Failed:", error);
+      setHederaResult({
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to create Hedera account",
+      });
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -356,6 +390,38 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <div className="flex flex-col gap-4 p-4">
+        <Button
+          onClick={handleCreateHederaAccount}
+          disabled={isCreating}
+          className="w-fit"
+        >
+          {isCreating
+            ? "Creating Hedera Account..."
+            : "Create Test Hedera Account"}
+        </Button>
+
+        {hederaResult.data && (
+          <div className="p-4 bg-green-50 rounded-lg">
+            <h3 className="font-semibold text-green-700">
+              Account Created Successfully:
+            </h3>
+            <pre className="mt-2 p-2 bg-white rounded border text-sm overflow-auto">
+              {JSON.stringify(hederaResult.data, null, 2)}
+            </pre>
+          </div>
+        )}
+
+        {hederaResult.error && (
+          <div className="p-4 bg-red-50 rounded-lg">
+            <h3 className="font-semibold text-red-700">
+              Error Creating Account:
+            </h3>
+            <p className="mt-2 text-red-600">{hederaResult.error}</p>
+          </div>
+        )}
+      </div>
 
       <Footer />
     </div>

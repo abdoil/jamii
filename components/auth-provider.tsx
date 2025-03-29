@@ -12,7 +12,8 @@ type User = {
   name: string;
   email: string;
   role: "user" | "admin" | "delivery";
-  walletAddress?: string;
+  hederaAccountId: string;
+  hederaPublicKey: string;
 };
 
 type AuthContextType = {

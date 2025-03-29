@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,31 +18,45 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
 
 export default function StoreSignUpPage() {
-  const router = useRouter();
-  const { register } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsLoading(true);
-    setError(null);
-
-    const formData = new FormData(event.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-    const name = formData.get("name") as string;
+    setError("");
 
     try {
-      await register({
-        email,
-        password,
-        name,
-        role: "admin",
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          name,
+          role: "admin",
+        }),
       });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create store account");
+      }
+
       router.push("/auth/signin");
     } catch (error) {
-      setError("Failed to create store account. Please try again.");
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Failed to create store account. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -74,6 +87,8 @@ export default function StoreSignUpPage() {
                 autoCorrect="off"
                 disabled={isLoading}
                 required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
               />
             </div>
             <div className="grid gap-2">
@@ -88,6 +103,8 @@ export default function StoreSignUpPage() {
                 autoCorrect="off"
                 disabled={isLoading}
                 required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div className="grid gap-2">
@@ -99,6 +116,8 @@ export default function StoreSignUpPage() {
                 autoComplete="new-password"
                 disabled={isLoading}
                 required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             {error && (
