@@ -1,6 +1,7 @@
 "use client";
 
 import { Store } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 export default function AuthLayout({
@@ -27,11 +28,13 @@ export default function AuthLayout({
         <div className="relative z-10 flex flex-col h-full p-12">
           {/* Brand/Logo Area */}
           <div className="flex items-center mb-12">
-            <Link href="/" className="flex items-center space-x-3">
-              <div className="h-10 w-10 rounded-full bg-white/80 flex items-center justify-center">
-                <Store className="h-6 w-6 text-primary" />
-              </div>
-              <span className="font-bold text-2xl text-foreground">Jamii</span>
+            <Link href="/" className="flex items-center space-x-1">
+              {/* <div className="h-10 w-10 rounded-full bg-white/80 flex items-center justify-center"> */}
+              <Image src="/logo.png" alt="Jamii" width={120} height={120} />
+              {/* </div> */}
+              <span className="font-bold text-foreground uppercase text-2xl hidden md:block">
+                Jamii
+              </span>
             </Link>
           </div>
 
@@ -65,10 +68,10 @@ export default function AuthLayout({
         <div className="w-full max-w-md space-y-8">
           <div className="text-center lg:hidden mb-6">
             <Link href="/" className="inline-flex items-center space-x-2">
-              <div className="h-8 w-8 rounded-full bg-white/80 flex items-center justify-center">
-                <Store className="h-6 w-6 text-primary" />
-              </div>
-              <span className="font-bold text-xl text-foreground">Jamii</span>
+              {/* <div className="h-8 w-8 rounded-full bg-white/80 flex items-center justify-center"> */}
+              <Image src="/logo.png" alt="Jamii" width={80} height={80} />
+              {/* </div> */}
+              {/* <span className="font-bold text-xl text-foreground">Jamii</span> */}
             </Link>
           </div>
 

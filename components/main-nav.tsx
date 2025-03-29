@@ -21,6 +21,7 @@ import {
   UserPlus,
   X,
 } from "lucide-react";
+import Image from "next/image";
 
 interface MainNavProps extends React.HTMLAttributes<HTMLElement> {
   onMenuClick?: () => void;
@@ -95,8 +96,10 @@ export function MainNav({ className, onMenuClick, ...props }: MainNavProps) {
     >
       <div className="flex items-center">
         <Link href="/" className="mr-6 flex items-center space-x-2">
-          <Store className="h-6 w-6 text-primary" />
-          <span className="font-bold text-xl">Jamii</span>
+          <Image src="/logo.png" alt="Jamii" width={80} height={80} />
+          <span className="font-bold text-primary uppercase text-xl hidden md:block">
+            Jamii
+          </span>
         </Link>
 
         <div className="hidden md:flex items-center space-x-6">
