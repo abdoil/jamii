@@ -159,10 +159,10 @@ export default function DeliveryDashboardPage() {
       {/* Header with Wallet Summary */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+          <h1 className="text-xl font-bold tracking-tight md:text-2xl">
             Delivery Dashboard
           </h1>
-          <p className="text-muted-foreground text-sm md:text-base">
+          <p className="text-xs text-muted-foreground md:text-sm">
             Manage deliveries and track earnings
           </p>
         </div>
@@ -170,15 +170,15 @@ export default function DeliveryDashboardPage() {
         {/* Compact Wallet Summary */}
         <div className="flex items-center gap-3 p-2 rounded-lg border bg-card">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-              <Wallet className="h-4 w-4 text-primary" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
+              <Wallet className="h-3.5 w-3.5 text-primary" />
             </div>
             <div>
-              <div className="flex items-baseline gap-1">
+              <div className="flex items-baseline gap-1 text-sm">
                 <HbarConverter amount={54.7} />
               </div>
               <div className="text-xs text-muted-foreground">
-                ID: {user?.hederaAccountId?.substring(0, 8)}...
+                ID: {user?.hederaAccountId}
               </div>
             </div>
           </div>
@@ -189,6 +189,7 @@ export default function DeliveryDashboardPage() {
               </Button>
             </SheetTrigger>
             <SheetContent side="right">
+              <h2 className="sr-only">Hedera Wallet Details</h2>
               <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-medium flex items-center gap-2">
@@ -271,66 +272,70 @@ export default function DeliveryDashboardPage() {
       {/* Stats Overview */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Card className="border-l-4 border-l-primary">
-          <CardContent className="p-4">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-muted-foreground">
                   Earnings
                 </p>
-                <p className="text-xl font-bold">
+                <p className="text-lg font-bold md:text-xl">
                   KES {totalEarnings.toFixed(2)}
                 </p>
               </div>
-              <div className="rounded-full bg-primary/10 p-2">
-                <DollarSign className="h-4 w-4 text-primary" />
+              <div className="rounded-full bg-primary/10 p-1.5">
+                <DollarSign className="h-3.5 w-3.5 text-primary" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-l-blue-500">
-          <CardContent className="p-4">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-muted-foreground">
                   Active
                 </p>
-                <p className="text-xl font-bold">{activeDeliveries}</p>
+                <p className="text-lg font-bold md:text-xl">
+                  {activeDeliveries}
+                </p>
               </div>
-              <div className="rounded-full bg-blue-500/10 p-2">
-                <Truck className="h-4 w-4 text-blue-500" />
+              <div className="rounded-full bg-blue-500/10 p-1.5">
+                <Truck className="h-3.5 w-3.5 text-blue-500" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-l-amber-500">
-          <CardContent className="p-4">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-muted-foreground">
                   Available
                 </p>
-                <p className="text-xl font-bold">5</p>
+                <p className="text-lg font-bold md:text-xl">5</p>
               </div>
-              <div className="rounded-full bg-amber-500/10 p-2">
-                <Package className="h-4 w-4 text-amber-500" />
+              <div className="rounded-full bg-amber-500/10 p-1.5">
+                <Package className="h-3.5 w-3.5 text-amber-500" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-l-green-500">
-          <CardContent className="p-4">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-muted-foreground">
                   Completed
                 </p>
-                <p className="text-xl font-bold">{completedDeliveries}</p>
+                <p className="text-lg font-bold md:text-xl">
+                  {completedDeliveries}
+                </p>
               </div>
-              <div className="rounded-full bg-green-500/10 p-2">
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
+              <div className="rounded-full bg-green-500/10 p-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
               </div>
             </div>
           </CardContent>
@@ -374,11 +379,13 @@ export default function DeliveryDashboardPage() {
                     <CardHeader className="p-4 pb-0">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
-                            <Truck className="h-4 w-4 text-blue-600" />
+                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100">
+                            <Truck className="h-3.5 w-3.5 text-blue-600" />
                           </div>
                           <div>
-                            <h3 className="font-medium">Order #{order.id}</h3>
+                            <h4 className="text-sm font-medium">
+                              Order #{order.id}
+                            </h4>
                             <p className="text-xs text-muted-foreground">
                               {new Date(order.createdAt).toLocaleDateString()}
                             </p>
@@ -393,9 +400,9 @@ export default function DeliveryDashboardPage() {
                       </div>
                     </CardHeader>
                     <CardContent className="p-4 pt-3">
-                      <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="grid grid-cols-2 gap-2 text-xs md:text-sm">
                         <div className="flex items-start gap-1">
-                          <MapPin className="h-3.5 w-3.5 mt-0.5 text-muted-foreground" />
+                          <MapPin className="h-3 w-3 mt-0.5 text-muted-foreground" />
                           <div className="overflow-hidden">
                             <p className="font-medium">Delivery Address</p>
                             <p className="text-muted-foreground truncate">
@@ -404,7 +411,7 @@ export default function DeliveryDashboardPage() {
                           </div>
                         </div>
                         <div className="flex items-start gap-1">
-                          <ShoppingBag className="h-3.5 w-3.5 mt-0.5 text-muted-foreground" />
+                          <ShoppingBag className="h-3 w-3 mt-0.5 text-muted-foreground" />
                           <div>
                             <p className="font-medium">Package</p>
                             <p className="text-muted-foreground">
@@ -451,11 +458,11 @@ export default function DeliveryDashboardPage() {
             </div>
           ) : (
             <div className="flex h-40 flex-col items-center justify-center border rounded-lg bg-muted/10">
-              <AlertCircle className="h-10 w-10 text-muted-foreground/50 mb-2" />
-              <p className="text-muted-foreground font-medium">
+              <AlertCircle className="h-8 w-8 text-muted-foreground/50 mb-2" />
+              <p className="text-sm text-muted-foreground font-medium">
                 No active deliveries
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Check available jobs to find delivery opportunities
               </p>
             </div>
@@ -473,21 +480,23 @@ export default function DeliveryDashboardPage() {
                   <CardHeader className="p-4 pb-0">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100">
-                          <Package className="h-4 w-4 text-amber-600" />
+                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100">
+                          <Package className="h-3.5 w-3.5 text-amber-600" />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="font-medium">Job #{jobId}</h3>
+                            <h4 className="text-sm font-medium">
+                              Job #{jobId}
+                            </h4>
                             <Badge
                               variant="outline"
-                              className="bg-blue-50 text-blue-700 border-blue-200"
+                              className="bg-blue-50 text-blue-700 border-blue-200 text-xs px-1.5 py-0"
                             >
                               Bidding
                             </Badge>
                           </div>
                           <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Timer className="h-3 w-3" />
+                            <Timer className="h-2.5 w-2.5" />
                             <span>
                               Posted {job} hour{job !== 1 ? "s" : ""} ago
                             </span>
@@ -518,7 +527,7 @@ export default function DeliveryDashboardPage() {
                         <div>
                           <p className="font-medium">Delivery</p>
                           <p className="text-muted-foreground">
-                            Within {job + 2} miles
+                            Within {job + 2} km
                           </p>
                         </div>
                       </div>
@@ -527,7 +536,7 @@ export default function DeliveryDashboardPage() {
                         <div>
                           <p className="font-medium">Package</p>
                           <p className="text-muted-foreground">
-                            {job + 1} items, {(job * 0.5 + 1).toFixed(1)} lbs
+                            {job + 1} items, {(job * 0.5 + 1).toFixed(1)} kgs
                           </p>
                         </div>
                       </div>
@@ -555,17 +564,17 @@ export default function DeliveryDashboardPage() {
                     <div className="flex items-center gap-2 flex-1">
                       <Label
                         htmlFor={`bid-${jobId}`}
-                        className="text-sm whitespace-nowrap"
+                        className="text-xs whitespace-nowrap"
                       >
                         Your Bid:
                       </Label>
                       <div className="relative flex-1 max-w-[120px]">
-                        <DollarSign className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                        <DollarSign className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
                         <Input
                           id={`bid-${jobId}`}
                           type="number"
                           placeholder="0.00"
-                          className="pl-7"
+                          className="pl-7 h-8 text-sm"
                           value={bidAmount[jobId] || ""}
                           onChange={(e) =>
                             setBidAmount((prev) => ({
@@ -636,7 +645,7 @@ export default function DeliveryDashboardPage() {
                               <CheckCircle2 className="h-4 w-4 text-green-600" />
                             </div>
                             <div>
-                              <h3 className="font-medium">Order #{order.id}</h3>
+                              <h4 className="font-medium">Order #{order.id}</h4>
                               <p className="text-xs text-muted-foreground">
                                 Completed on{" "}
                                 {new Date(order.updatedAt).toLocaleDateString()}

@@ -44,11 +44,11 @@ const getJobData = (id: string) => ({
   orderId: `ORD-${id.substring(4)}`,
   storeId: "1",
   storeName: "Jamii Supermarket",
-  storeLocation: "Koinange Street, Nairobi, Kenya",
+  storeLocation: "Koinange Street, Nairobi",
   customerLocation: "456 Park Ave, Uptown",
-  distance: "3.5 miles",
+  distance: "3.5 km",
   items: 4,
-  weight: "5.2 lbs",
+  weight: "5.2 kgs",
   estimatedEarning: "5.00-8.00",
   postedAt: new Date(Date.now() - 3600000).toISOString(),
   deadline: new Date(Date.now() + 7200000).toISOString(),
@@ -121,7 +121,7 @@ export default function JobDetailPage({
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       toast.success(
-        `Your bid of $${bidAmount} has been submitted for job #${resolvedParams.id}`
+        `Your bid of KES ${bidAmount} has been submitted for job #${resolvedParams.id}`
       );
 
       // Update the job with the new bid
@@ -150,48 +150,47 @@ export default function JobDetailPage({
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div>
             <Link
               href="/delivery/dashboard"
-              className="flex items-center text-sm text-muted-foreground hover:text-foreground"
+              className="flex items-center text-xs text-muted-foreground hover:text-foreground"
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
+              <ArrowLeft className="mr-1 h-3.5 w-3.5" />
               Back to Dashboard
             </Link>
-            <Skeleton className="mt-2 h-9 w-40" />
+            <Skeleton className="mt-2 h-6 w-32" />
           </div>
-          <Skeleton className="h-6 w-24" />
+          <Skeleton className="h-5 w-20" />
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
-          <div className="md:col-span-2 space-y-6">
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="md:col-span-2 space-y-4">
             <Card>
-              <CardHeader>
-                <Skeleton className="h-6 w-32" />
-                <Skeleton className="h-4 w-48" />
+              <CardHeader className="p-3">
+                <Skeleton className="h-5 w-28" />
+                <Skeleton className="h-3.5 w-40" />
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-5 w-40" />
+              <CardContent className="p-3 space-y-4">
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-3.5 w-20" />
                     <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3.5 w-28" />
                   </div>
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-5 w-40" />
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-3.5 w-20" />
                     <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3.5 w-28" />
                   </div>
                 </div>
                 <Separator />
-                <div className="grid gap-4 md:grid-cols-3">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="space-y-2">
+                <div className="grid gap-3 md:grid-cols-4">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="space-y-1.5">
+                      <Skeleton className="h-3.5 w-16" />
                       <Skeleton className="h-4 w-20" />
-                      <Skeleton className="h-5 w-24" />
-                      <Skeleton className="h-4 w-28" />
                     </div>
                   ))}
                 </div>
@@ -200,19 +199,19 @@ export default function JobDetailPage({
           </div>
           <div>
             <Card>
-              <CardHeader>
-                <Skeleton className="h-6 w-32" />
-                <Skeleton className="h-4 w-40" />
+              <CardHeader className="p-3">
+                <Skeleton className="h-5 w-28" />
+                <Skeleton className="h-3.5 w-32" />
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3">
                 <div className="text-center">
-                  <Skeleton className="mx-auto h-8 w-24" />
-                  <Skeleton className="mx-auto mt-2 h-4 w-36" />
+                  <Skeleton className="mx-auto h-6 w-20" />
+                  <Skeleton className="mx-auto mt-1.5 h-3.5 w-28" />
                 </div>
               </CardContent>
-              <CardFooter>
-                <div className="w-full space-y-4">
-                  <Skeleton className="h-10 w-full" />
+              <CardFooter className="p-3">
+                <div className="w-full space-y-3">
+                  <Skeleton className="h-8 w-full" />
                 </div>
               </CardFooter>
             </Card>
@@ -225,12 +224,12 @@ export default function JobDetailPage({
   if (!job) {
     return (
       <div className="flex h-[60vh] flex-col items-center justify-center">
-        <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-        <h2 className="text-2xl font-bold">Job Not Found</h2>
-        <p className="mb-6 text-muted-foreground">
+        <AlertCircle className="h-10 w-10 text-muted-foreground mb-3" />
+        <h2 className="text-xl font-bold">Job Not Found</h2>
+        <p className="mb-4 text-sm text-muted-foreground">
           The requested job could not be found
         </p>
-        <Button asChild>
+        <Button asChild size="sm">
           <Link href="/delivery/jobs">View All Jobs</Link>
         </Button>
       </div>
@@ -250,23 +249,23 @@ export default function JobDetailPage({
   );
 
   return (
-    <div className="flex flex-col gap-6 pb-20 md:pb-10">
+    <div className="flex flex-col gap-4 pb-20 md:pb-10">
       <div className="flex items-center justify-between">
         <div>
           <Link
             href="/delivery/dashboard"
-            className="flex items-center text-sm text-muted-foreground hover:text-foreground"
+            className="flex items-center text-xs text-muted-foreground hover:text-foreground"
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
+            <ArrowLeft className="mr-1 h-3.5 w-3.5" />
             Back to Dashboard
           </Link>
-          <div className="mt-2 flex items-center gap-2">
-            <h1 className="text-2xl font-bold md:text-3xl">
+          <div className="mt-1.5 flex items-center gap-2">
+            <h4 className="text-lg font-bold md:text-xl">
               Job #{resolvedParams.id}
-            </h1>
+            </h4>
             <Badge
               variant="outline"
-              className="bg-blue-50 text-blue-700 border-blue-200"
+              className="bg-blue-50 text-blue-700 border-blue-200 text-xs"
             >
               Open for Bids
             </Badge>
@@ -274,54 +273,56 @@ export default function JobDetailPage({
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        <div className="md:col-span-2 space-y-6">
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="md:col-span-2 space-y-4">
           {/* Job Overview Card */}
           <Card>
-            <CardHeader className="pb-2">
+            <CardHeader className="p-3 pb-1.5">
               <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle>Delivery Details</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-base">Delivery Details</CardTitle>
+                  <CardDescription className="text-xs">
                     Information about this delivery job
                   </CardDescription>
                 </div>
-                <div className="flex items-center gap-1 text-sm">
-                  <Timer className="h-4 w-4 text-amber-500" />
+                <div className="flex items-center gap-1 text-xs">
+                  <Timer className="h-3.5 w-3.5 text-amber-500" />
                   <span className="font-medium text-amber-600">
                     {hoursRemaining}h {minutesRemaining}m remaining
                   </span>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-5">
+            <CardContent className="p-3 space-y-4">
               {/* Locations */}
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-lg border p-3 bg-muted/10">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-green-100">
-                      <Store className="h-3.5 w-3.5 text-green-600" />
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="rounded-lg border p-2.5 bg-muted/10">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100">
+                      <Store className="h-3 w-3 text-green-600" />
                     </div>
-                    <span className="font-medium">Pickup Location</span>
+                    <span className="text-xs font-medium">Pickup Location</span>
                   </div>
-                  <div className="ml-9 space-y-1">
-                    <p className="font-medium">{job.storeName}</p>
-                    <p className="text-sm text-muted-foreground">
+                  <div className="ml-7.5 space-y-0.5">
+                    <p className="text-sm font-medium">{job.storeName}</p>
+                    <p className="text-xs text-muted-foreground">
                       {job.storeLocation}
                     </p>
                   </div>
                 </div>
 
-                <div className="rounded-lg border p-3 bg-muted/10">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100">
-                      <MapPin className="h-3.5 w-3.5 text-blue-600" />
+                <div className="rounded-lg border p-2.5 bg-muted/10">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100">
+                      <MapPin className="h-3 w-3 text-blue-600" />
                     </div>
-                    <span className="font-medium">Delivery Location</span>
+                    <span className="text-xs font-medium">
+                      Delivery Location
+                    </span>
                   </div>
-                  <div className="ml-9 space-y-1">
-                    <p className="font-medium">Customer Address</p>
-                    <p className="text-sm text-muted-foreground">
+                  <div className="ml-7.5 space-y-0.5">
+                    <p className="text-sm font-medium">Customer Address</p>
+                    <p className="text-xs text-muted-foreground">
                       {job.customerLocation}
                     </p>
                   </div>
@@ -329,29 +330,29 @@ export default function JobDetailPage({
               </div>
 
               {/* Job Details */}
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                <div className="flex flex-col items-center justify-center rounded-lg border p-3 bg-muted/5">
-                  <ShoppingBag className="h-5 w-5 text-muted-foreground mb-1" />
-                  <span className="text-sm font-medium">Items</span>
-                  <span className="text-lg font-bold">{job.items}</span>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                <div className="flex flex-col items-center justify-center rounded-lg border p-2 bg-muted/5">
+                  <ShoppingBag className="h-4 w-4 text-muted-foreground mb-0.5" />
+                  <span className="text-xs font-medium">Items</span>
+                  <span className="text-sm font-bold">{job.items}</span>
                 </div>
 
-                <div className="flex flex-col items-center justify-center rounded-lg border p-3 bg-muted/5">
-                  <Package className="h-5 w-5 text-muted-foreground mb-1" />
-                  <span className="text-sm font-medium">Weight</span>
-                  <span className="text-lg font-bold">{job.weight}</span>
+                <div className="flex flex-col items-center justify-center rounded-lg border p-2 bg-muted/5">
+                  <Package className="h-4 w-4 text-muted-foreground mb-0.5" />
+                  <span className="text-xs font-medium">Weight</span>
+                  <span className="text-sm font-bold">{job.weight}</span>
                 </div>
 
-                <div className="flex flex-col items-center justify-center rounded-lg border p-3 bg-muted/5">
-                  <Route className="h-5 w-5 text-muted-foreground mb-1" />
-                  <span className="text-sm font-medium">Distance</span>
-                  <span className="text-lg font-bold">{job.distance}</span>
+                <div className="flex flex-col items-center justify-center rounded-lg border p-2 bg-muted/5">
+                  <Route className="h-4 w-4 text-muted-foreground mb-0.5" />
+                  <span className="text-xs font-medium">Distance</span>
+                  <span className="text-sm font-bold">{job.distance}</span>
                 </div>
 
-                <div className="flex flex-col items-center justify-center rounded-lg border p-3 bg-muted/5">
-                  <Calendar className="h-5 w-5 text-muted-foreground mb-1" />
-                  <span className="text-sm font-medium">Posted</span>
-                  <span className="text-sm font-medium">
+                <div className="flex flex-col items-center justify-center rounded-lg border p-2 bg-muted/5">
+                  <Calendar className="h-4 w-4 text-muted-foreground mb-0.5" />
+                  <span className="text-xs font-medium">Posted</span>
+                  <span className="text-xs font-medium">
                     {new Date(job.postedAt).toLocaleDateString()}
                   </span>
                 </div>
@@ -361,52 +362,52 @@ export default function JobDetailPage({
 
           {/* Current Bids Card */}
           <Card>
-            <CardHeader className="pb-2">
+            <CardHeader className="p-3 pb-1.5">
               <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle>Current Bids</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-base">Current Bids</CardTitle>
+                  <CardDescription className="text-xs">
                     {job.bids.length} bids from delivery agents
                   </CardDescription>
                 </div>
                 {userBid && (
                   <Badge
                     variant="outline"
-                    className="bg-blue-50 text-blue-700 border-blue-200"
+                    className="bg-blue-50 text-blue-700 border-blue-200 text-xs"
                   >
                     You've Bid
                   </Badge>
                 )}
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3">
               {job.bids.length > 0 ? (
-                <ScrollArea className="max-h-[400px] pr-4">
-                  <div className="space-y-3 pb-2">
+                <ScrollArea className="max-h-[350px] pr-3">
+                  <div className="space-y-2.5 pb-1">
                     {job.bids.map((bid: any) => (
                       <div
                         key={bid.id}
-                        className={`rounded-lg border p-3 ${
+                        className={`rounded-lg border p-2.5 ${
                           bid.deliveryAgentId === user?.id
                             ? "bg-blue-50 border-blue-200"
                             : ""
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                              <User className="h-4 w-4 text-primary" />
+                          <div className="flex items-center gap-1.5">
+                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10">
+                              <User className="h-3 w-3 text-primary" />
                             </div>
                             <div>
-                              <div className="font-medium">
+                              <div className="text-sm font-medium">
                                 {maskName(bid.deliveryAgentName)}
                                 {bid.deliveryAgentId === user?.id && (
-                                  <span className="ml-2 text-xs text-blue-600 font-medium">
+                                  <span className="ml-1.5 text-xs text-blue-600 font-medium">
                                     (Your Bid)
                                   </span>
                                 )}
                               </div>
-                              <div className="text-sm text-muted-foreground">
+                              <div className="text-xs text-muted-foreground">
                                 Bid placed{" "}
                                 {new Date(
                                   bid.estimatedDeliveryTime
@@ -416,32 +417,32 @@ export default function JobDetailPage({
                           </div>
                           <Badge
                             variant="outline"
-                            className="bg-yellow-50 text-yellow-700 border-yellow-200"
+                            className="bg-yellow-50 text-yellow-700 border-yellow-200 text-xs"
                           >
                             Pending
                           </Badge>
                         </div>
 
-                        <div className="mt-3 grid grid-cols-2 gap-2">
-                          <div className="flex items-center gap-2 rounded-md bg-muted/20 p-2">
-                            <DollarSign className="h-4 w-4 text-green-600" />
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                          <div className="flex items-center gap-1.5 rounded-md bg-muted/20 p-1.5">
+                            <DollarSign className="h-3.5 w-3.5 text-green-600" />
                             <div>
                               <div className="text-xs text-muted-foreground">
                                 Bid Amount
                               </div>
-                              <div className="font-medium">
+                              <div className="text-sm font-medium">
                                 KES {bid.amount.toFixed(2)}
                               </div>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2 rounded-md bg-muted/20 p-2">
-                            <Clock className="h-4 w-4 text-amber-600" />
+                          <div className="flex items-center gap-1.5 rounded-md bg-muted/20 p-1.5">
+                            <Clock className="h-3.5 w-3.5 text-amber-600" />
                             <div>
                               <div className="text-xs text-muted-foreground">
                                 Est. Delivery
                               </div>
-                              <div className="font-medium">
+                              <div className="text-sm font-medium">
                                 {new Date(
                                   bid.estimatedDeliveryTime
                                 ).toLocaleTimeString([], {
@@ -457,12 +458,12 @@ export default function JobDetailPage({
                   </div>
                 </ScrollArea>
               ) : (
-                <div className="flex h-40 flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-                  <AlertCircle className="h-10 w-10 text-muted-foreground/50 mb-2" />
-                  <p className="text-muted-foreground font-medium">
+                <div className="flex h-32 flex-col items-center justify-center rounded-lg border border-dashed p-6 text-center">
+                  <AlertCircle className="h-8 w-8 text-muted-foreground/50 mb-1.5" />
+                  <p className="text-sm text-muted-foreground font-medium">
                     No bids yet
                   </p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     Be the first to bid on this job
                   </p>
                 </div>
@@ -471,20 +472,21 @@ export default function JobDetailPage({
           </Card>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Earnings Card */}
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle>Estimated Earnings</CardTitle>
-              <CardDescription>Potential earnings for this job</CardDescription>
+            <CardHeader className="p-3 pb-1.5">
+              <CardTitle className="text-base">Estimated Earnings</CardTitle>
+              <CardDescription className="text-xs">
+                Potential earnings for this job
+              </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="flex flex-col items-center justify-center rounded-lg border p-4 bg-muted/5">
-                <DollarSign className="h-6 w-6 text-green-600 mb-1" />
-                <div className="text-3xl font-bold text-green-600">
+            <CardContent className="p-3">
+              <div className="flex flex-col items-center justify-center rounded-lg border p-3 bg-muted/5">
+                <div className="text-xl font-bold text-green-600">
                   KES {job.estimatedEarning}
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Based on distance and items
                 </p>
               </div>
@@ -493,28 +495,30 @@ export default function JobDetailPage({
 
           {/* Bid Form Card */}
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle>{userBid ? "Your Bid" : "Place Your Bid"}</CardTitle>
-              <CardDescription>
+            <CardHeader className="p-3 pb-1.5">
+              <CardTitle className="text-base">
+                {userBid ? "Your Bid" : "Place Your Bid"}
+              </CardTitle>
+              <CardDescription className="text-xs">
                 {userBid
                   ? "You've already submitted a bid for this job"
                   : "Submit your bid for this delivery job"}
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3">
               {userBid ? (
-                <div className="space-y-4">
-                  <div className="rounded-lg bg-blue-50 p-4 border border-blue-200">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CheckCircle2 className="h-5 w-5 text-blue-600" />
-                      <p className="font-medium">Bid Submitted</p>
+                <div className="space-y-3">
+                  <div className="rounded-lg bg-blue-50 p-3 border border-blue-200">
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <CheckCircle2 className="h-4 w-4 text-blue-600" />
+                      <p className="text-sm font-medium">Bid Submitted</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-3 mt-3">
+                    <div className="grid grid-cols-2 gap-2 mt-2">
                       <div>
                         <p className="text-xs text-muted-foreground">
                           Your Bid
                         </p>
-                        <p className="text-lg font-bold">
+                        <p className="text-sm font-bold">
                           KES {userBid.amount.toFixed(2)}
                         </p>
                       </div>
@@ -522,7 +526,7 @@ export default function JobDetailPage({
                         <p className="text-xs text-muted-foreground">
                           Est. Delivery Time
                         </p>
-                        <p className="text-sm font-medium">
+                        <p className="text-xs font-medium">
                           {new Date(
                             userBid.estimatedDeliveryTime
                           ).toLocaleTimeString([], {
@@ -535,6 +539,7 @@ export default function JobDetailPage({
                   </div>
                   <Button
                     variant="outline"
+                    size="sm"
                     className="w-full"
                     onClick={() => router.push("/delivery/jobs")}
                   >
@@ -542,13 +547,13 @@ export default function JobDetailPage({
                   </Button>
                 </div>
               ) : (
-                <form onSubmit={handleSubmitBid} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="bidAmount" className="text-sm">
+                <form onSubmit={handleSubmitBid} className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="bidAmount" className="text-xs">
                       Your Bid Amount (KES)
                     </Label>
                     <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <DollarSign className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         id="bidAmount"
                         type="number"
@@ -556,7 +561,7 @@ export default function JobDetailPage({
                         min="1"
                         value={bidAmount}
                         onChange={(e) => setBidAmount(e.target.value)}
-                        className="pl-9"
+                        className="pl-7 h-8 text-sm"
                         required
                       />
                     </div>
@@ -565,19 +570,19 @@ export default function JobDetailPage({
                     </p>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="estimatedTime" className="text-sm">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="estimatedTime" className="text-xs">
                       Estimated Delivery Time (minutes)
                     </Label>
                     <div className="relative">
-                      <Clock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Clock className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         id="estimatedTime"
                         type="number"
                         min="15"
                         value={estimatedTime}
                         onChange={(e) => setEstimatedTime(e.target.value)}
-                        className="pl-9"
+                        className="pl-7 h-8 text-sm"
                         required
                       />
                     </div>
@@ -588,6 +593,7 @@ export default function JobDetailPage({
 
                   <Button
                     type="submit"
+                    size="sm"
                     className="w-full"
                     disabled={isSubmitting}
                   >
