@@ -2,30 +2,26 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/components/auth-provider";
-import { useOrdersStore, type OrderStatus } from "@/lib/zustand-store";
+import { useOrdersStore } from "@/lib/zustand-store";
 import { AdminLayout } from "@/components/admin/admin-layout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import toast from "react-hot-toast";
-import { Search } from "lucide-react";
+import { ArrowLeft, Package, Loader2 } from "lucide-react";
 
 export default function AdminOrdersPage() {
   const { user } = useAuth();
-  const { orders, fetchOrders, updateOrderStatus } = useOrdersStore();
+  const { orders, fetchOrders } = useOrdersStore();
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
   const router = useRouter();
 
   useEffect(() => {
@@ -39,7 +35,7 @@ export default function AdminOrdersPage() {
       return;
     }
 
-    const loadData = async () => {
+    const loadOrders = async () => {
       setIsLoading(true);
       try {
         await fetchOrders(user.id, "admin");
@@ -50,19 +46,10 @@ export default function AdminOrdersPage() {
       }
     };
 
-    loadData();
+    loadOrders();
   }, [user, router, fetchOrders]);
 
-  const handleUpdateStatus = async (orderId: string, status: OrderStatus) => {
-    try {
-      await updateOrderStatus(orderId, status);
-      toast.success(`Order status changed to ${status}`);
-    } catch (error) {
-      toast.error("Failed to update order status");
-    }
-  };
-
-  const getStatusBadge = (status: OrderStatus) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending":
         return (
@@ -109,144 +96,68 @@ export default function AdminOrdersPage() {
             Cancelled
           </Badge>
         );
+      default:
+        return null;
     }
   };
 
-  const filteredOrders = orders.filter((order) => {
-    // Apply status filter
-    if (statusFilter !== "all" && order.status !== statusFilter) {
-      return false;
-    }
-
-    // Apply search filter
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      return (
-        order.id.toLowerCase().includes(searchLower) ||
-        order.deliveryAddress.toLowerCase().includes(searchLower) ||
-        order.customerId.toLowerCase().includes(searchLower)
-      );
-    }
-
-    return true;
-  });
-
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Orders</h1>
-        <p className="text-muted-foreground">
-          Manage and process customer orders
-        </p>
-      </div>
-
-      <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
-        <div className="flex flex-col space-y-4 md:flex-row md:space-x-4 md:space-y-0 md:w-2/3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search orders..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <Select
-            value={statusFilter}
-            onValueChange={(value) =>
-              setStatusFilter(value as OrderStatus | "all")
-            }
+    <AdminLayout>
+      <div className="container py-8">
+        <div className="mb-8">
+          <Link
+            href="/admin"
+            className="flex items-center text-sm text-muted-foreground hover:text-foreground"
           >
-            <SelectTrigger className="w-full md:w-[180px]">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="confirmed">Confirmed</SelectItem>
-              <SelectItem value="in-transit">In Transit</SelectItem>
-              <SelectItem value="delivered">Delivered</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-            </SelectContent>
-          </Select>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </Link>
+          <h1 className="mt-4 text-3xl font-bold">Orders</h1>
+          <p className="text-muted-foreground">
+            Manage and track all orders in the system
+          </p>
         </div>
-      </div>
 
-      <Tabs defaultValue="all" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="all">All Orders</TabsTrigger>
-          <TabsTrigger value="pending">Pending</TabsTrigger>
-          <TabsTrigger value="active">Active</TabsTrigger>
-          <TabsTrigger value="completed">Completed</TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="all" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="all">All Orders</TabsTrigger>
+            <TabsTrigger value="pending">Pending</TabsTrigger>
+            <TabsTrigger value="active">Active</TabsTrigger>
+            <TabsTrigger value="completed">Completed</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="all">
-          <Card>
-            <CardHeader>
-              <CardTitle>All Orders</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="flex h-40 items-center justify-center">
-                  <p>Loading orders...</p>
-                </div>
-              ) : filteredOrders.length > 0 ? (
-                <div className="space-y-4">
-                  {filteredOrders.map((order) => (
-                    <div key={order.id} className="rounded-lg border p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div>
-                          <h3 className="font-medium">Order #{order.id}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(order.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
+          <TabsContent value="all">
+            {isLoading ? (
+              <div className="flex h-40 items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : orders.length > 0 ? (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {orders.map((order) => (
+                  <Card key={order.id} className="overflow-hidden">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle>Order #{order.id}</CardTitle>
+                        {getStatusBadge(order.status)}
+                      </div>
+                      <CardDescription>
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
                         <div className="flex items-center gap-2">
-                          {getStatusBadge(order.status)}
+                          <Package className="h-4 w-4 text-muted-foreground" />
+                          <span>{order.products.length} items</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Total:</span>
                           <span className="font-medium">
-                            ${order.totalAmount.toFixed(2)}
+                            KES {order.totalAmount.toFixed(2)}
                           </span>
                         </div>
-                      </div>
-                      <div className="mt-2 space-y-1">
-                        <p className="text-sm">
-                          <span className="font-medium">Customer ID:</span>{" "}
-                          {order.customerId}
-                        </p>
-                        <p className="text-sm">
-                          <span className="font-medium">Delivery:</span>{" "}
-                          {order.deliveryAddress}
-                        </p>
-                        <p className="text-sm">
-                          <span className="font-medium">Items:</span>{" "}
-                          {order.products.length} products
-                        </p>
-                      </div>
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {order.status === "pending" && (
-                          <Button
-                            size="sm"
-                            onClick={() =>
-                              handleUpdateStatus(order.id, "confirmed")
-                            }
-                          >
-                            Confirm Order
-                          </Button>
-                        )}
-                        {order.status === "confirmed" && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              handleUpdateStatus(order.id, "in-transit")
-                            }
-                          >
-                            Mark as In Transit
-                          </Button>
-                        )}
                         <Button
-                          size="sm"
-                          variant="outline"
+                          className="w-full"
                           onClick={() =>
                             router.push(`/admin/orders/${order.id}`)
                           }
@@ -254,77 +165,179 @@ export default function AdminOrdersPage() {
                           View Details
                         </Button>
                       </div>
-                    </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="flex h-40 flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+                <h3 className="mb-2 text-xl font-medium">No orders found</h3>
+                <p className="mb-4 text-muted-foreground">
+                  There are no orders in the system yet
+                </p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="pending">
+            {isLoading ? (
+              <div className="flex h-40 items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : orders.filter((order) => order.status === "pending").length >
+              0 ? (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {orders
+                  .filter((order) => order.status === "pending")
+                  .map((order) => (
+                    <Card key={order.id} className="overflow-hidden">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <CardTitle>Order #{order.id}</CardTitle>
+                          {getStatusBadge(order.status)}
+                        </div>
+                        <CardDescription>
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <Package className="h-4 w-4 text-muted-foreground" />
+                            <span>{order.products.length} items</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">
+                              Total:
+                            </span>
+                            <span className="font-medium">
+                              KES {order.totalAmount.toFixed(2)}
+                            </span>
+                          </div>
+                          <Button
+                            className="w-full"
+                            onClick={() =>
+                              router.push(`/admin/orders/${order.id}`)
+                            }
+                          >
+                            Review Order
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
                   ))}
-                </div>
-              ) : (
-                <div className="flex h-40 flex-col items-center justify-center">
-                  <p className="text-muted-foreground">No orders found</p>
-                  <p className="text-sm text-muted-foreground">
-                    Try adjusting your filters or search terms
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+              </div>
+            ) : (
+              <div className="flex h-40 flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+                <h3 className="mb-2 text-xl font-medium">No pending orders</h3>
+                <p className="mb-4 text-muted-foreground">
+                  There are no pending orders at the moment
+                </p>
+              </div>
+            )}
+          </TabsContent>
 
-        <TabsContent value="pending">
-          <Card>
-            <CardHeader>
-              <CardTitle>Pending Orders</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="flex h-40 items-center justify-center">
-                  <p>Loading orders...</p>
-                </div>
-              ) : filteredOrders.filter((order) => order.status === "pending")
-                  .length > 0 ? (
-                <div className="space-y-4">
-                  {filteredOrders
-                    .filter((order) => order.status === "pending")
-                    .map((order) => (
-                      <div key={order.id} className="rounded-lg border p-4">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div>
-                            <h3 className="font-medium">Order #{order.id}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {new Date(order.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
+          <TabsContent value="active">
+            {isLoading ? (
+              <div className="flex h-40 items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : orders.filter(
+                (order) =>
+                  order.status === "confirmed" || order.status === "in-transit"
+              ).length > 0 ? (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {orders
+                  .filter(
+                    (order) =>
+                      order.status === "confirmed" ||
+                      order.status === "in-transit"
+                  )
+                  .map((order) => (
+                    <Card key={order.id} className="overflow-hidden">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <CardTitle>Order #{order.id}</CardTitle>
+                          {getStatusBadge(order.status)}
+                        </div>
+                        <CardDescription>
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
                           <div className="flex items-center gap-2">
-                            {getStatusBadge(order.status)}
+                            <Package className="h-4 w-4 text-muted-foreground" />
+                            <span>{order.products.length} items</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">
+                              Total:
+                            </span>
                             <span className="font-medium">
-                              ${order.totalAmount.toFixed(2)}
+                              KES {order.totalAmount.toFixed(2)}
                             </span>
                           </div>
-                        </div>
-                        <div className="mt-2 space-y-1">
-                          <p className="text-sm">
-                            <span className="font-medium">Customer ID:</span>{" "}
-                            {order.customerId}
-                          </p>
-                          <p className="text-sm">
-                            <span className="font-medium">Delivery:</span>{" "}
-                            {order.deliveryAddress}
-                          </p>
-                          <p className="text-sm">
-                            <span className="font-medium">Items:</span>{" "}
-                            {order.products.length} products
-                          </p>
-                        </div>
-                        <div className="mt-4 flex flex-wrap gap-2">
                           <Button
-                            size="sm"
+                            className="w-full"
                             onClick={() =>
-                              handleUpdateStatus(order.id, "confirmed")
+                              router.push(`/admin/orders/${order.id}`)
                             }
                           >
-                            Confirm Order
+                            Track Order
                           </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
+            ) : (
+              <div className="flex h-40 flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+                <h3 className="mb-2 text-xl font-medium">No active orders</h3>
+                <p className="mb-4 text-muted-foreground">
+                  There are no active orders at the moment
+                </p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="completed">
+            {isLoading ? (
+              <div className="flex h-40 items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : orders.filter((order) => order.status === "delivered").length >
+              0 ? (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {orders
+                  .filter((order) => order.status === "delivered")
+                  .map((order) => (
+                    <Card key={order.id} className="overflow-hidden">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <CardTitle>Order #{order.id}</CardTitle>
+                          {getStatusBadge(order.status)}
+                        </div>
+                        <CardDescription>
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <Package className="h-4 w-4 text-muted-foreground" />
+                            <span>{order.products.length} items</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">
+                              Total:
+                            </span>
+                            <span className="font-medium">
+                              KES {order.totalAmount.toFixed(2)}
+                            </span>
+                          </div>
                           <Button
-                            size="sm"
+                            className="w-full"
                             variant="outline"
                             onClick={() =>
                               router.push(`/admin/orders/${order.id}`)
@@ -333,190 +346,23 @@ export default function AdminOrdersPage() {
                             View Details
                           </Button>
                         </div>
-                      </div>
-                    ))}
-                </div>
-              ) : (
-                <div className="flex h-40 flex-col items-center justify-center">
-                  <p className="text-muted-foreground">No pending orders</p>
-                  <p className="text-sm text-muted-foreground">
-                    All orders have been processed
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="active">
-          <Card>
-            <CardHeader>
-              <CardTitle>Active Orders</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="flex h-40 items-center justify-center">
-                  <p>Loading orders...</p>
-                </div>
-              ) : filteredOrders.filter(
-                  (order) =>
-                    order.status === "confirmed" ||
-                    order.status === "in-transit"
-                ).length > 0 ? (
-                <div className="space-y-4">
-                  {filteredOrders
-                    .filter(
-                      (order) =>
-                        order.status === "confirmed" ||
-                        order.status === "in-transit"
-                    )
-                    .map((order) => (
-                      <div key={order.id} className="rounded-lg border p-4">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div>
-                            <h3 className="font-medium">Order #{order.id}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {new Date(order.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {getStatusBadge(order.status)}
-                            <span className="font-medium">
-                              ${order.totalAmount.toFixed(2)}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="mt-2 space-y-1">
-                          <p className="text-sm">
-                            <span className="font-medium">Customer ID:</span>{" "}
-                            {order.customerId}
-                          </p>
-                          <p className="text-sm">
-                            <span className="font-medium">Delivery:</span>{" "}
-                            {order.deliveryAddress}
-                          </p>
-                          <p className="text-sm">
-                            <span className="font-medium">Items:</span>{" "}
-                            {order.products.length} products
-                          </p>
-                        </div>
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          {order.status === "confirmed" && (
-                            <Button
-                              size="sm"
-                              onClick={() =>
-                                handleUpdateStatus(order.id, "in-transit")
-                              }
-                            >
-                              Mark as In Transit
-                            </Button>
-                          )}
-                          {order.status === "in-transit" && (
-                            <Button
-                              size="sm"
-                              onClick={() =>
-                                handleUpdateStatus(order.id, "delivered")
-                              }
-                            >
-                              Mark as Delivered
-                            </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              router.push(`/admin/orders/${order.id}`)
-                            }
-                          >
-                            View Details
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              ) : (
-                <div className="flex h-40 flex-col items-center justify-center">
-                  <p className="text-muted-foreground">No active orders</p>
-                  <p className="text-sm text-muted-foreground">
-                    All orders have been completed or are pending
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="completed">
-          <Card>
-            <CardHeader>
-              <CardTitle>Completed Orders</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="flex h-40 items-center justify-center">
-                  <p>Loading orders...</p>
-                </div>
-              ) : filteredOrders.filter((order) => order.status === "delivered")
-                  .length > 0 ? (
-                <div className="space-y-4">
-                  {filteredOrders
-                    .filter((order) => order.status === "delivered")
-                    .map((order) => (
-                      <div key={order.id} className="rounded-lg border p-4">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div>
-                            <h3 className="font-medium">Order #{order.id}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {new Date(order.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {getStatusBadge(order.status)}
-                            <span className="font-medium">
-                              ${order.totalAmount.toFixed(2)}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="mt-2 space-y-1">
-                          <p className="text-sm">
-                            <span className="font-medium">Customer ID:</span>{" "}
-                            {order.customerId}
-                          </p>
-                          <p className="text-sm">
-                            <span className="font-medium">Delivery:</span>{" "}
-                            {order.deliveryAddress}
-                          </p>
-                          <p className="text-sm">
-                            <span className="font-medium">Items:</span>{" "}
-                            {order.products.length} products
-                          </p>
-                        </div>
-                        <div className="mt-4">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              router.push(`/admin/orders/${order.id}`)
-                            }
-                          >
-                            View Details
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              ) : (
-                <div className="flex h-40 flex-col items-center justify-center">
-                  <p className="text-muted-foreground">No completed orders</p>
-                  <p className="text-sm text-muted-foreground">
-                    Orders will appear here when they are delivered
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
+            ) : (
+              <div className="flex h-40 flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+                <h3 className="mb-2 text-xl font-medium">
+                  No completed orders
+                </h3>
+                <p className="mb-4 text-muted-foreground">
+                  There are no completed orders yet
+                </p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
+    </AdminLayout>
   );
 }

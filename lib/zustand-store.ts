@@ -159,36 +159,30 @@ type OrdersState = {
   updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<void>;
 };
 
-export const useOrdersStore = create<OrdersState>()((set, get) => ({
+export const useOrdersStore = create<OrdersState>((set, get) => ({
   orders: [],
   isLoading: false,
   error: null,
-  fetchOrders: async (userId, role) => {
+
+  fetchOrders: async (userId: string, role: string) => {
     set({ isLoading: true, error: null });
     try {
-      let endpoint = "/api/orders";
-
-      if (role === "customer") {
-        endpoint += `?customerId=${userId}`;
-      } else if (role === "admin") {
-        endpoint += `?storeId=${userId}`;
-      } else if (role === "delivery") {
-        endpoint += `?deliveryAgentId=${userId}`;
-      }
-
-      const response = await fetch(endpoint);
+      const response = await fetch(`/api/orders?userId=${userId}&role=${role}`);
       if (!response.ok) {
-        throw new Error("Failed to fetch orders");
+        const error = await response.json();
+        throw new Error(error.message || "Failed to fetch orders");
       }
-      const data = await response.json();
-      set({ orders: data, isLoading: false });
-    } catch (error) {
-      set({ error: (error as Error).message, isLoading: false });
+      const orders = await response.json();
+      set({ orders, isLoading: false });
+    } catch (error: any) {
+      set({ error: error.message, isLoading: false });
     }
   },
+
   getOrder: (id) => {
     return get().orders.find((order) => order.id === id);
   },
+
   createOrder: async (order) => {
     set({ isLoading: true, error: null });
     try {
@@ -216,6 +210,7 @@ export const useOrdersStore = create<OrdersState>()((set, get) => ({
       throw error;
     }
   },
+
   updateOrderStatus: async (orderId, status) => {
     set({ isLoading: true, error: null });
     try {

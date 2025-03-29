@@ -29,56 +29,14 @@ import {
 } from "lucide-react";
 import type { Order, OrderStatus } from "@/lib/zustand-store";
 import { QRGenerator } from "@/components/qr-code/qr-generator";
-
-// Mock order data
-const getOrderData = (id: string): Order => ({
-  id,
-  customerId: "1",
-  storeId: "1",
-  deliveryAgentId: id === "1" ? "3" : undefined,
-  products: [
-    { productId: "1", quantity: 2 },
-    { productId: "2", quantity: 1 },
-  ],
-  status: id === "1" ? "delivered" : id === "2" ? "pending" : "in-transit",
-  totalAmount: 24.97,
-  createdAt: "2023-05-15T14:30:00Z",
-  updatedAt: "2023-05-15T18:45:00Z",
-  deliveryAddress: "456 Park Ave, Uptown, USA",
-  trackingInfo:
-    id === "1"
-      ? {
-          location: "Customer address",
-          timestamp: "2023-05-15T18:45:00Z",
-          status: "Delivered",
-        }
-      : id === "3"
-      ? {
-          location: "In transit",
-          timestamp: "2023-05-18T14:10:00Z",
-          status: "Out for delivery",
-          estimatedDelivery: "2023-05-18T17:00:00Z",
-        }
-      : undefined,
-});
-
-// Mock product data
-const products = [
-  {
-    id: "1",
-    name: "Organic Apples",
-    description: "Fresh organic apples from local farms",
-    price: 3.99,
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: "2",
-    name: "Whole Grain Bread",
-    description: "Freshly baked whole grain bread",
-    price: 4.49,
-    image: "/placeholder.svg?height=200&width=200",
-  },
-];
+import {
+  useUpdateOrderStatus,
+  useGetOrder,
+  useGetProducts,
+} from "@/lib/hooks/use-order";
+import { use } from "react";
+import { useOrdersStore, useProductsStore } from "@/lib/zustand-store";
+import { useQuery } from "@tanstack/react-query";
 
 // Mock delivery bids
 const deliveryBids = [
@@ -117,15 +75,27 @@ const customer = {
 export default function AdminOrderDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const resolvedParams = use(params);
   const { user } = useAuth();
   const router = useRouter();
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [order, setOrder] = useState<Order | null>(null);
-  const [orderProducts, setOrderProducts] = useState<any[]>([]);
-  const [bids, setBids] = useState<any[]>([]);
+  const { data: order, isLoading: isOrderLoading } = useGetOrder(
+    resolvedParams.id
+  );
+  const { data: products, isLoading: isProductsLoading } = useGetProducts();
+  const updateOrderStatus = useUpdateOrderStatus();
+
+  const orderProducts =
+    order?.products.map((item: any) => {
+      const product = products?.find((p: any) => p.id === item.productId);
+      return {
+        ...product,
+        quantity: item.quantity,
+        total: (product?.price || 0) * item.quantity,
+      };
+    }) || [];
 
   useEffect(() => {
     if (!user) {
@@ -137,41 +107,17 @@ export default function AdminOrderDetailPage({
       router.push("/");
       return;
     }
+  }, [user, router]);
 
-    // Simulate loading order data
-    setIsLoading(true);
-    setTimeout(() => {
-      const orderData = getOrderData(params.id);
-      setOrder(orderData);
-
-      // Get products for this order
-      const prods = orderData.products.map((item) => {
-        const product = products.find((p) => p.id === item.productId);
-        return {
-          ...product,
-          quantity: item.quantity,
-          total: (product?.price || 0) * item.quantity,
-        };
-      });
-      setOrderProducts(prods);
-
-      // Get bids if order is pending
-      if (orderData.status === "pending") {
-        setBids(deliveryBids.filter((bid) => bid.orderId === params.id));
-      }
-
-      setIsLoading(false);
-    }, 1000);
-  }, [user, router, params.id]);
+  const isLoading = isOrderLoading || isProductsLoading;
 
   const handleUpdateStatus = async (status: OrderStatus) => {
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      setOrder((prev) => (prev ? { ...prev, status } : null));
-
-      toast.success(`Order status changed to ${status}`);
+      await updateOrderStatus.mutateAsync({
+        orderId: resolvedParams.id,
+        status,
+      });
+      toast.success(`Order status changed to KES {status}`);
     } catch (error) {
       toast.error("Failed to update order status");
     }
@@ -182,20 +128,10 @@ export default function AdminOrderDetailPage({
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      const acceptedBid = bids.find((bid) => bid.id === bidId);
+      const acceptedBid = deliveryBids.find((bid) => bid.id === bidId);
       if (acceptedBid && order) {
-        setOrder({
-          ...order,
-          status: "confirmed",
-          deliveryAgentId: acceptedBid.deliveryAgentId,
-        });
-
-        setBids((prev) =>
-          prev.map((bid) => ({
-            ...bid,
-            status: bid.id === bidId ? "accepted" : "rejected",
-          }))
-        );
+        order.status = "confirmed";
+        order.deliveryAgentId = acceptedBid.deliveryAgentId;
       }
 
       toast.success("Delivery agent has been assigned to this order");
@@ -302,7 +238,9 @@ export default function AdminOrderDetailPage({
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Orders
           </Link>
-          <h1 className="mt-2 text-3xl font-bold">Order #{params.id}</h1>
+          <h1 className="mt-2 text-3xl font-bold">
+            Order #{resolvedParams.id}
+          </h1>
         </div>
         {getStatusBadge(order.status)}
       </div>
@@ -321,7 +259,7 @@ export default function AdminOrderDetailPage({
               <div className="space-y-2">
                 <h3 className="font-medium">Items</h3>
                 <div className="space-y-2">
-                  {orderProducts.map((item) => (
+                  {orderProducts.map((item: any) => (
                     <div
                       key={item.id}
                       className="flex items-center justify-between rounded-lg border p-3"
@@ -333,11 +271,11 @@ export default function AdminOrderDetailPage({
                         <div>
                           <p className="font-medium">{item.name}</p>
                           <p className="text-sm text-muted-foreground">
-                            ${item.price.toFixed(2)} x {item.quantity}
+                            KES {item.price.toFixed(2)} x {item.quantity}
                           </p>
                         </div>
                       </div>
-                      <p className="font-medium">${item.total.toFixed(2)}</p>
+                      <p className="font-medium">KES {item.total.toFixed(2)}</p>
                     </div>
                   ))}
                 </div>
@@ -435,7 +373,7 @@ export default function AdminOrderDetailPage({
             </CardFooter>
           </Card>
 
-          {order.status === "pending" && bids.length > 0 && (
+          {order.status === "pending" && deliveryBids.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle>Delivery Bids</CardTitle>
@@ -445,7 +383,7 @@ export default function AdminOrderDetailPage({
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {bids.map((bid) => (
+                  {deliveryBids.map((bid) => (
                     <div
                       key={bid.id}
                       className="flex items-center justify-between rounded-lg border p-4"
@@ -460,7 +398,7 @@ export default function AdminOrderDetailPage({
                         <div className="mt-2 space-y-1 text-sm">
                           <div className="flex items-center gap-2">
                             <DollarSign className="h-3 w-3 text-muted-foreground" />
-                            <span>${bid.amount.toFixed(2)}</span>
+                            <span>KES {bid.amount.toFixed(2)}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <Clock className="h-3 w-3 text-muted-foreground" />
@@ -500,16 +438,16 @@ export default function AdminOrderDetailPage({
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span>${order.totalAmount.toFixed(2)}</span>
+                  <span>KES {order.totalAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Delivery Fee</span>
-                  <span>$5.00</span>
+                  <span>KES 5.00</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-medium">
                   <span>Total</span>
-                  <span>${(order.totalAmount + 5).toFixed(2)}</span>
+                  <span>KES {(order.totalAmount + 5).toFixed(2)}</span>
                 </div>
               </div>
             </CardContent>
@@ -600,7 +538,7 @@ export default function AdminOrderDetailPage({
                 <QRGenerator
                   value={generateQRCodeData(order.id, "pickup")}
                   title="Pickup Verification"
-                  description={`Order #${order.id}`}
+                  description={`Order ${order.id}`}
                 />
               </CardContent>
             </Card>

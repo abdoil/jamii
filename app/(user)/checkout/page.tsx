@@ -2,11 +2,12 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/lib/zustand-store";
 import { useAuth } from "@/components/auth-provider";
 import { createEscrowPayment } from "@/lib/hedera-utils";
+import { useOrder } from "@/lib/hooks/use-order";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -30,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
 export default function CheckoutPage() {
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
@@ -39,9 +41,15 @@ export default function CheckoutPage() {
   const { items, getTotalPrice, clearCart } = useCartStore();
   const { user, isWalletConnected, connectWallet } = useAuth();
   const router = useRouter();
+  const createOrder = useOrder();
+
+  useEffect(() => {
+    if (items.length === 0) {
+      router.push("/shop");
+    }
+  }, [items.length, router]);
 
   if (items.length === 0) {
-    router.push("/shop");
     return null;
   }
 
@@ -72,43 +80,34 @@ export default function CheckoutPage() {
         storeWalletAddress
       );
 
-      // Create order
+      // Create order using React Query mutation
       const orderData = {
         customerId: user.id,
-        storeId: items[0].product.storeId, // Assuming all items are from the same store
+        storeId: items[0].product.storeId,
         products: items.map((item) => ({
           productId: item.product.id,
           quantity: item.quantity,
         })),
-        status: "pending",
+        status: "pending" as const,
         totalAmount: getTotalPrice(),
         deliveryAddress: `${address}, ${city}, ${county}`,
         transactionId: transaction.id,
       };
 
-      const response = await fetch("/api/order/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(orderData),
-      });
+      console.log("Submitting order data:", orderData);
 
-      if (!response.ok) {
-        throw new Error("Failed to create order");
-      }
-
-      const order = await response.json();
+      const order = await createOrder.mutateAsync(orderData);
+      console.log("Order created successfully:", order);
 
       // Clear cart and redirect to order confirmation
       clearCart();
-
-      toast.success(`Your order #${order.id} has been placed`);
-
       router.push(`/orders/${order.id}`);
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Error in handleSubmit:", error);
       toast.error(
-        "There was an error processing your order. Please try again."
+        error.response?.data?.error ||
+          error.message ||
+          "There was an error processing your order. Please try again."
       );
     } finally {
       setIsProcessing(false);

@@ -157,7 +157,7 @@ export default function OrdersPage() {
                               Total:
                             </span>
                             <span className="font-medium">
-                              ${order.totalAmount.toFixed(2)}
+                              KES {order.totalAmount.toFixed(2)}
                             </span>
                           </div>
                           <Button
@@ -224,7 +224,7 @@ export default function OrdersPage() {
                                 Total:
                               </span>
                               <span className="font-medium">
-                                ${order.totalAmount.toFixed(2)}
+                                KES {order.totalAmount.toFixed(2)}
                               </span>
                             </div>
                             <Button
@@ -282,7 +282,7 @@ export default function OrdersPage() {
                                 Total:
                               </span>
                               <span className="font-medium">
-                                ${order.totalAmount.toFixed(2)}
+                                KES {order.totalAmount.toFixed(2)}
                               </span>
                             </div>
                             <Button

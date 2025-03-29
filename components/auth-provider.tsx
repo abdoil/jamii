@@ -8,6 +8,7 @@ import { useSession, signOut, signIn } from "next-auth/react";
 
 type User = {
   id: string;
+  uid: string;
   name: string;
   email: string;
   role: "user" | "admin" | "delivery";

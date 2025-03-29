@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/auth-provider";
@@ -32,6 +32,21 @@ import {
 } from "lucide-react";
 import { ReviewForm } from "@/components/review/review-form";
 import QRCode from "react-qr-code";
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  image?: string;
+}
+
+interface OrderWithProducts extends Order {
+  products: {
+    productId: string;
+    quantity: number;
+    product?: Product;
+  }[];
+}
 
 // Mock delivery bids - moved outside component to prevent recreation on each render
 const mockDeliveryBids = [
@@ -98,32 +113,44 @@ function QRGenerator({
 export default function OrderDetailsPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const resolvedParams = use(params);
   const { user } = useAuth();
   const { orders, fetchOrders } = useOrdersStore();
-  const [order, setOrder] = useState<Order | null>(null);
+  const [order, setOrder] = useState<OrderWithProducts | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [deliveryBids, setDeliveryBids] = useState<any[]>([]);
   const router = useRouter();
 
-  // Generate QR code data - memoized to prevent recreation on each render
-  const generateQRCodeData = useCallback(
-    (orderId: string, type: "pickup" | "delivery") => {
-      // Create a data object with order ID, type, and timestamp for security
-      const qrData = {
-        orderId,
-        type,
-        timestamp: Date.now(),
-        // In a real app, you would add a signature or token for verification
-        signature: `${orderId}-${type}-${Date.now()}`,
-      };
+  // Fetch product details
+  const fetchProductDetails = async (productId: string): Promise<Product> => {
+    try {
+      const response = await fetch(`/api/products`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch product details");
+      }
+      const products = await response.json();
+      const product = products.find((p: Product) => p.id === productId);
 
-      // Convert to JSON string
-      return JSON.stringify(qrData);
-    },
-    []
-  );
+      if (!product) {
+        return {
+          id: productId,
+          name: "Product not found",
+          price: 0,
+        };
+      }
+
+      return product;
+    } catch (error) {
+      console.error("Error fetching product:", error);
+      return {
+        id: productId,
+        name: "Product not found",
+        price: 0,
+      };
+    }
+  };
 
   // Load order data - optimized to prevent unnecessary re-renders
   useEffect(() => {
@@ -139,21 +166,38 @@ export default function OrderDetailsPage({
 
       setIsLoading(true);
       try {
-        await fetchOrders(user.id, user.role);
+        // Fetch order directly from API
+        const response = await fetch(`/api/orders/${resolvedParams.id}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch order");
+        }
+        const foundOrder = await response.json();
 
         if (!isMounted) return;
 
-        // Find the order in the store
-        const foundOrder = orders.find((o) => o.id === params.id);
         if (foundOrder) {
-          setOrder(foundOrder);
+          // Fetch product details for each product in the order
+          const orderWithProducts = {
+            ...foundOrder,
+            products: await Promise.all(
+              foundOrder.products.map(
+                async (item: { productId: string; quantity: number }) => ({
+                  ...item,
+                  product: await fetchProductDetails(item.productId),
+                })
+              )
+            ),
+          };
+          setOrder(orderWithProducts);
 
           // If order is pending, fetch delivery bids
           if (foundOrder.status === "pending") {
             // In a real app, this would be an API call
             // For now, we'll use mock data
             setDeliveryBids(
-              mockDeliveryBids.filter((bid) => bid.orderId === params.id)
+              mockDeliveryBids.filter(
+                (bid) => bid.orderId === resolvedParams.id
+              )
             );
           }
         } else {
@@ -177,7 +221,7 @@ export default function OrderDetailsPage({
     return () => {
       isMounted = false;
     };
-  }, [user, router, fetchOrders, params.id, toast]);
+  }, [user, router, resolvedParams.id, toast]);
 
   // Memoize the handleSelectDeliveryAgent function to prevent recreation on each render
   const handleSelectDeliveryAgent = useCallback(
@@ -335,13 +379,19 @@ export default function OrderDetailsPage({
                               </div>
                               <div>
                                 <p className="font-medium">
-                                  Product #{item.productId}
+                                  {item.product?.name || "Product not found"}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
                                   Quantity: {item.quantity}
                                 </p>
                               </div>
                             </div>
+                            <p className="font-medium">
+                              KES
+                              {(
+                                (item.product?.price || 0) * item.quantity
+                              ).toFixed(2)}
+                            </p>
                           </div>
                         ))}
                       </div>
@@ -414,7 +464,7 @@ export default function OrderDetailsPage({
                                 <div className="flex items-center gap-2">
                                   <DollarSign className="h-3 w-3 text-muted-foreground" />
                                   <span>
-                                    Delivery Fee: ${bid.amount.toFixed(2)}
+                                    Delivery Fee: KES {bid.amount.toFixed(2)}
                                   </span>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -490,16 +540,16 @@ export default function OrderDetailsPage({
                   <div className="space-y-4">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
-                      <span>${order.totalAmount.toFixed(2)}</span>
+                      <span>KES {order.totalAmount.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Delivery Fee</span>
-                      <span>$5.00</span>
+                      <span>KES 5.00</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between font-medium">
                       <span>Total</span>
-                      <span>${(order.totalAmount + 5).toFixed(2)}</span>
+                      <span>KES {(order.totalAmount + 5).toFixed(2)}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -588,9 +638,13 @@ export default function OrderDetailsPage({
                   </CardHeader>
                   <CardContent className="flex justify-center">
                     <QRGenerator
-                      value={generateQRCodeData(order.id, "delivery")}
+                      value={JSON.stringify({
+                        orderId: order.id,
+                        type: "delivery",
+                        timestamp: Date.now(),
+                      })}
                       title="Delivery Verification"
-                      description={`Order #${order.id}`}
+                      description={`Order ${order.id}`}
                     />
                   </CardContent>
                 </Card>

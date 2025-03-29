@@ -1,12 +1,8 @@
-import type React from "react";
 import type { Metadata } from "next";
 import { Merriweather } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
-import { AuthProvider } from "@/components/auth-provider";
-import { SessionProviderWrapper } from "@/components/providers/session-provider";
-// import { Toaster } from "@/components/ui/toaster";
-import { Toaster } from "react-hot-toast";
+import { RootProvider } from "@/components/providers/root-provider";
+
 const merriweather = Merriweather({
   weight: ["400", "700"],
   subsets: ["latin"],
@@ -16,6 +12,9 @@ const merriweather = Merriweather({
 export const metadata: Metadata = {
   title: "Jamii | A decentralized supply chain platform",
   description: "A decentralized logistics and supply chain platform",
+  icons: {
+    icon: "/logo.png",
+  },
 };
 
 export default function RootLayout({
@@ -26,19 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${merriweather.variable} font-merriweather`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <SessionProviderWrapper>
-            <AuthProvider>
-              {children}
-              <Toaster />
-            </AuthProvider>
-          </SessionProviderWrapper>
-        </ThemeProvider>
+        <RootProvider>{children}</RootProvider>
       </body>
     </html>
   );

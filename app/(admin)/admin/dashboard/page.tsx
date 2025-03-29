@@ -28,11 +28,13 @@ import {
   ShoppingCart,
   Truck,
 } from "lucide-react";
+import { useUpdateOrderStatus } from "@/lib/hooks/use-order";
 
 export default function AdminDashboardPage() {
   const { user } = useAuth();
-  const { orders, fetchOrders, updateOrderStatus } = useOrdersStore();
+  const { orders, fetchOrders } = useOrdersStore();
   const { products, fetchProducts } = useProductsStore();
+  const updateOrderStatus = useUpdateOrderStatus();
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
@@ -63,9 +65,10 @@ export default function AdminDashboardPage() {
 
   const handleUpdateStatus = async (orderId: string, status: OrderStatus) => {
     try {
-      await updateOrderStatus(orderId, status);
+      await updateOrderStatus.mutateAsync({ orderId, status });
       toast.success(`Order status changed to ${status}`);
     } catch (error) {
+      console.error("Error updating order status:", error);
       toast.error("Failed to update order status");
     }
   };
