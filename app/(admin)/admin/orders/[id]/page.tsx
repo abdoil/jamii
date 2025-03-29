@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/components/ui/use-toast";
+import toast from "react-hot-toast";
 import {
   ArrowLeft,
   Calendar,
@@ -121,7 +121,7 @@ export default function AdminOrderDetailPage({
 }) {
   const { user } = useAuth();
   const router = useRouter();
-  const { toast } = useToast();
+
   const [isLoading, setIsLoading] = useState(true);
   const [order, setOrder] = useState<Order | null>(null);
   const [orderProducts, setOrderProducts] = useState<any[]>([]);
@@ -171,16 +171,9 @@ export default function AdminOrderDetailPage({
 
       setOrder((prev) => (prev ? { ...prev, status } : null));
 
-      toast({
-        title: "Order updated",
-        description: `Order status changed to ${status}`,
-      });
+      toast.success(`Order status changed to ${status}`);
     } catch (error) {
-      toast({
-        title: "Update failed",
-        description: "Failed to update order status",
-        variant: "destructive",
-      });
+      toast.error("Failed to update order status");
     }
   };
 
@@ -205,16 +198,9 @@ export default function AdminOrderDetailPage({
         );
       }
 
-      toast({
-        title: "Bid accepted",
-        description: "Delivery agent has been assigned to this order",
-      });
+      toast.success("Delivery agent has been assigned to this order");
     } catch (error) {
-      toast({
-        title: "Failed to accept bid",
-        description: "There was an error accepting the bid",
-        variant: "destructive",
-      });
+      toast.error("Failed to accept bid");
     }
   };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "react-hot-toast";
 
 export default function AdminRootLayout({
   children,

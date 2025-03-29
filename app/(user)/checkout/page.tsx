@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import toast from "react-hot-toast";
 import { ArrowLeft, Loader2, Wallet } from "lucide-react";
 import Link from "next/link";
 import {
@@ -33,14 +33,11 @@ import {
 export default function CheckoutPage() {
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-  const [zipCode, setZipCode] = useState("");
-  const [notes, setNotes] = useState("");
+  const [county, setCounty] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
   const { items, getTotalPrice, clearCart } = useCartStore();
   const { user, isWalletConnected, connectWallet } = useAuth();
-  const { toast } = useToast();
   const router = useRouter();
 
   if (items.length === 0) {
@@ -52,21 +49,13 @@ export default function CheckoutPage() {
     e.preventDefault();
 
     if (!user) {
-      toast({
-        title: "Please log in",
-        description: "You need to be logged in to place an order",
-        variant: "destructive",
-      });
+      toast.error("You need to be logged in to place an order");
       router.push("/auth/signin");
       return;
     }
 
-    if (!address || !city || !state || !zipCode) {
-      toast({
-        title: "Missing information",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
+    if (!address || !city || !county) {
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -93,8 +82,7 @@ export default function CheckoutPage() {
         })),
         status: "pending",
         totalAmount: getTotalPrice(),
-        deliveryAddress: `${address}, ${city}, ${state} ${zipCode}`,
-        notes,
+        deliveryAddress: `${address}, ${city}, ${county}`,
         transactionId: transaction.id,
       };
 
@@ -115,19 +103,13 @@ export default function CheckoutPage() {
       // Clear cart and redirect to order confirmation
       clearCart();
 
-      toast({
-        title: "Order placed successfully",
-        description: `Your order #${order.id} has been placed`,
-      });
+      toast.success(`Your order #${order.id} has been placed`);
 
       router.push(`/orders/${order.id}`);
     } catch (error) {
-      toast({
-        title: "Order failed",
-        description:
-          "There was an error processing your order. Please try again.",
-        variant: "destructive",
-      });
+      toast.error(
+        "There was an error processing your order. Please try again."
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -181,10 +163,10 @@ export default function CheckoutPage() {
                     </div>
                     <div>
                       <div>
-                        <Label htmlFor="state">County</Label>
+                        <Label htmlFor="county">County</Label>
                         <Select
-                          value={state}
-                          onValueChange={(value) => setState(value)}
+                          value={county}
+                          onValueChange={(value) => setCounty(value)}
                           required
                         >
                           <SelectTrigger>

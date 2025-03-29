@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/components/ui/use-toast";
+import toast from "react-hot-toast";
 import { MainNav } from "@/components/main-nav";
 import { CartDrawer } from "@/components/shop/cart-drawer";
 import { ArrowLeft, Minus, Plus, ShoppingCart, Star } from "lucide-react";
@@ -30,7 +30,6 @@ export default function ProductDetailPage({
   const [quantity, setQuantity] = useState(1);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const router = useRouter();
-  const { toast } = useToast();
 
   useEffect(() => {
     const loadData = async () => {
@@ -62,10 +61,7 @@ export default function ProductDetailPage({
   const handleAddToCart = () => {
     if (product) {
       addItem(product, quantity);
-      toast({
-        title: "Added to cart",
-        description: `${quantity} x ${product.name} added to your cart`,
-      });
+      toast.success(`${quantity} x ${product.name} added to your cart`);
       setQuantity(1);
     }
   };

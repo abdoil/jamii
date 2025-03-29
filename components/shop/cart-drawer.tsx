@@ -14,7 +14,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/components/ui/use-toast";
+import toast from "react-hot-toast";
 import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 
 interface CartDrawerProps {
@@ -33,7 +33,6 @@ export function CartDrawer({ onCheckout }: CartDrawerProps) {
     clearCart,
   } = useCartStore();
   const { user, isWalletConnected, connectWallet } = useAuth();
-  const { toast } = useToast();
   const router = useRouter();
 
   useEffect(() => {
@@ -42,11 +41,7 @@ export function CartDrawer({ onCheckout }: CartDrawerProps) {
 
   const handleCheckout = async () => {
     if (!user) {
-      toast({
-        title: "Please log in",
-        description: "You need to be logged in to checkout",
-        variant: "destructive",
-      });
+      toast.error("You need to be logged in to checkout");
       router.push("/auth/signin");
       return;
     }
@@ -55,12 +50,9 @@ export function CartDrawer({ onCheckout }: CartDrawerProps) {
       try {
         await connectWallet();
       } catch (error) {
-        toast({
-          title: "Wallet connection required",
-          description:
-            "Please connect your Hedera wallet to proceed with checkout",
-          variant: "destructive",
-        });
+        toast.error(
+          "Please connect your Hedera wallet to proceed with checkout"
+        );
         return;
       }
     }
@@ -81,11 +73,7 @@ export function CartDrawer({ onCheckout }: CartDrawerProps) {
     if (currentQuantity < maxStock) {
       updateQuantity(productId, currentQuantity + 1);
     } else {
-      toast({
-        title: "Maximum stock reached",
-        description: "Cannot add more of this item",
-        variant: "destructive",
-      });
+      toast.error("Maximum stock reached");
     }
   };
 

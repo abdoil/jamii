@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
+import toast from "react-hot-toast";
 import { Search, MapPin, Package, Clock, DollarSign } from "lucide-react";
 
 export default function DeliveryOrdersPage() {
@@ -19,7 +19,6 @@ export default function DeliveryOrdersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const router = useRouter();
-  const { toast } = useToast();
 
   useEffect(() => {
     if (!user) {
@@ -49,16 +48,9 @@ export default function DeliveryOrdersPage() {
   const handleUpdateStatus = async (orderId: string, status: OrderStatus) => {
     try {
       await updateOrderStatus(orderId, status);
-      toast({
-        title: "Order updated",
-        description: `Order status changed to ${status}`,
-      });
+      toast.success(`Order status changed to ${status}`);
     } catch (error) {
-      toast({
-        title: "Update failed",
-        description: "Failed to update order status",
-        variant: "destructive",
-      });
+      toast.error("Failed to update order status");
     }
   };
 

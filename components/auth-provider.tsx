@@ -3,7 +3,7 @@
 import type React from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/components/ui/use-toast";
+import toast from "react-hot-toast";
 import { useSession, signOut, signIn } from "next-auth/react";
 
 type User = {
@@ -35,7 +35,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const router = useRouter();
-  const { toast } = useToast();
 
   const user = session?.user as User | null;
   const isLoading = status === "loading";
@@ -69,11 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         errorMessage = "Too many failed attempts. Please try again later.";
       }
 
-      toast({
-        title: "Login failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage);
       return { error: errorMessage };
     }
   };
@@ -95,19 +90,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(error.message || "Registration failed");
       }
 
-      toast({
-        title: "Registration successful",
-        description: "You can now log in with your credentials",
-      });
+      toast.success("Registration successful");
 
       router.push("/auth/signin");
     } catch (error: any) {
-      toast({
-        title: "Registration failed",
-        description:
-          error.message || "Please try again with different credentials",
-        variant: "destructive",
-      });
+      toast.error(
+        error.message || "Please try again with different credentials"
+      );
       throw error;
     }
   };
@@ -123,16 +112,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Redirect to home page
       router.push("/");
 
-      toast({
-        title: "Logged out",
-        description: "You have been successfully logged out",
-      });
+      toast.success("Logged out");
     } catch (error) {
-      toast({
-        title: "Logout failed",
-        description: "There was an error logging out",
-        variant: "destructive",
-      });
+      toast.error("Logout failed");
     }
   };
 
@@ -145,18 +127,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const mockWalletAddress = "0.0." + Math.floor(Math.random() * 1000000);
       setIsWalletConnected(true);
 
-      toast({
-        title: "Wallet connected",
-        description: `Connected to wallet: ${mockWalletAddress}`,
-      });
+      toast.success(`Connected to wallet: ${mockWalletAddress}`);
 
       return mockWalletAddress;
     } catch (error) {
-      toast({
-        title: "Wallet connection failed",
-        description: "Could not connect to Hedera wallet",
-        variant: "destructive",
-      });
+      toast.error("Wallet connection failed");
       throw error;
     }
   };

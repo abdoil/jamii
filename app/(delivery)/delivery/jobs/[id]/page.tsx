@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/components/ui/use-toast";
+import toast from "react-hot-toast";
 import {
   ArrowLeft,
   Calendar,
@@ -71,7 +71,7 @@ const getJobData = (id: string) => ({
 export default function JobDetailPage({ params }: { params: { id: string } }) {
   const { user } = useAuth();
   const router = useRouter();
-  const { toast } = useToast();
+
   const [isLoading, setIsLoading] = useState(true);
   const [job, setJob] = useState<any>(null);
   const [bidAmount, setBidAmount] = useState("6.50");
@@ -105,10 +105,9 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      toast({
-        title: "Bid submitted successfully",
-        description: `Your bid of $${bidAmount} has been submitted for job #${params.id}`,
-      });
+      toast.success(
+        `Your bid of $${bidAmount} has been submitted for job #${params.id}`
+      );
 
       // Update the job with the new bid
       setJob((prev: any) => ({
@@ -128,12 +127,7 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
         ],
       }));
     } catch (error) {
-      toast({
-        title: "Failed to submit bid",
-        description:
-          "There was an error submitting your bid. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to submit bid. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

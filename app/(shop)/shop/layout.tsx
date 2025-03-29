@@ -2,7 +2,7 @@
 
 import { Header } from "@/components/header";
 import { MainNav } from "@/components/main-nav";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "react-hot-toast";
 
 export default function ShopLayout({
   children,

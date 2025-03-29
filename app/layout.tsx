@@ -5,8 +5,8 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/components/auth-provider";
 import { SessionProviderWrapper } from "@/components/providers/session-provider";
-import { Toaster } from "@/components/ui/toaster";
-
+// import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "react-hot-toast";
 const merriweather = Merriweather({
   weight: ["400", "700"],
   subsets: ["latin"],

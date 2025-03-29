@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/components/ui/use-toast";
+import toast from "react-hot-toast";
 import {
   ArrowLeft,
   Clock,
@@ -44,7 +44,6 @@ export default function DeliveryOrderDetailPage({
   const [showScanner, setShowScanner] = useState(false);
   const [scanType, setScanType] = useState<"pickup" | "delivery">("pickup");
   const router = useRouter();
-  const { toast } = useToast();
 
   useEffect(() => {
     if (!user) {
@@ -67,20 +66,12 @@ export default function DeliveryOrderDetailPage({
         if (foundOrder) {
           setOrder(foundOrder);
         } else {
-          toast({
-            title: "Order not found",
-            description: "The requested order could not be found",
-            variant: "destructive",
-          });
+          toast.error("Order not found");
           router.push("/delivery/orders");
         }
       } catch (error) {
         console.error("Error loading order:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load order details",
-          variant: "destructive",
-        });
+        toast.error("Failed to load order details");
       } finally {
         setIsLoading(false);
       }
@@ -97,13 +88,7 @@ export default function DeliveryOrderDetailPage({
 
       // Verify that the QR code is for the correct order and type
       if (qrData.orderId !== order?.id || qrData.type !== scanType) {
-        toast({
-          title: "Invalid QR Code",
-          description: `This QR code is not valid for ${
-            scanType === "pickup" ? "picking up" : "delivering"
-          } this order.`,
-          variant: "destructive",
-        });
+        toast.error("Invalid QR Code");
         return;
       }
 
@@ -124,23 +109,17 @@ export default function DeliveryOrderDetailPage({
         });
       }
 
-      toast({
-        title: "Success",
-        description:
-          scanType === "pickup"
-            ? "Order picked up successfully! You can now deliver it to the customer."
-            : "Order delivered successfully!",
-      });
+      toast.success(
+        scanType === "pickup"
+          ? "Order picked up successfully! You can now deliver it to the customer."
+          : "Order delivered successfully!"
+      );
 
       // Hide scanner after successful scan
       setShowScanner(false);
     } catch (error) {
       console.error("Error processing QR code:", error);
-      toast({
-        title: "Error",
-        description: "Failed to process QR code. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to process QR code. Please try again.");
     }
   };
 

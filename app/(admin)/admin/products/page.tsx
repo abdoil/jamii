@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
+import toast from "react-hot-toast";
 import { Search, Plus, Edit, Trash2, Loader2 } from "lucide-react";
 
 export default function AdminProductsPage() {
@@ -20,7 +20,6 @@ export default function AdminProductsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const router = useRouter();
-  const { toast } = useToast();
 
   useEffect(() => {
     if (!user) {
@@ -49,10 +48,7 @@ export default function AdminProductsPage() {
 
   const handleDeleteProduct = (productId: string) => {
     // In a real app, this would call an API to delete the product
-    toast({
-      title: "Product deleted",
-      description: `Product #${productId} has been deleted`,
-    });
+    toast.success(`Product #${productId} has been deleted`);
   };
 
   const filteredProducts = products.filter((product) => {

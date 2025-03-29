@@ -17,13 +17,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import toast from "react-hot-toast";
 import { ArrowLeft, ImagePlus, Loader2 } from "lucide-react";
 import Link from "next/link";
 
 export default function NewProductPage() {
   const router = useRouter();
-  const { toast } = useToast();
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form state
@@ -37,11 +37,7 @@ export default function NewProductPage() {
     e.preventDefault();
 
     if (!name || !description || !price || !stock) {
-      toast({
-        title: "Missing fields",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
+      toast.error("Fill in all required fields");
       return;
     }
 
@@ -51,18 +47,11 @@ export default function NewProductPage() {
       // In a real app, this would be an API call to create the product
       await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate API call
 
-      toast({
-        title: "Product created",
-        description: `${name} has been added to your inventory`,
-      });
+      toast.success(`${name} has been added to your inventory`);
 
       router.push("/admin/products");
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to create product. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to create product. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

@@ -26,13 +26,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/components/ui/use-toast";
+import toast from "react-hot-toast";
 import { Wallet, Shield } from "lucide-react";
 
 export default function SettingsPage() {
   const { user, connectWallet, isWalletConnected } = useAuth();
   const router = useRouter();
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
 
   // Profile settings
@@ -90,16 +89,9 @@ export default function SettingsPage() {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      toast({
-        title: "Profile updated",
-        description: "Your profile information has been saved",
-      });
+      toast.success("Profile updated");
     } catch (error) {
-      toast({
-        title: "Update failed",
-        description: "Failed to update profile information",
-        variant: "destructive",
-      });
+      toast.error("Failed to update profile information");
     }
   };
 
@@ -108,16 +100,9 @@ export default function SettingsPage() {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      toast({
-        title: "Delivery settings updated",
-        description: "Your delivery preferences have been saved",
-      });
+      toast.success("Delivery settings updated");
     } catch (error) {
-      toast({
-        title: "Update failed",
-        description: "Failed to update delivery settings",
-        variant: "destructive",
-      });
+      toast.error("Failed to update delivery settings");
     }
   };
 
@@ -126,26 +111,19 @@ export default function SettingsPage() {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      toast({
-        title: "Notification settings updated",
-        description: "Your notification preferences have been saved",
-      });
+      toast.success("Notification settings updated");
     } catch (error) {
-      toast({
-        title: "Update failed",
-        description: "Failed to update notification settings",
-        variant: "destructive",
-      });
+      toast.error("Failed to update notification settings");
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <p>Loading settings...</p>
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className="flex h-[60vh] items-center justify-center">
+  //       <p>Loading settings...</p>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="flex flex-col gap-6">

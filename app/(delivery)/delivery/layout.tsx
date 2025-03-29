@@ -1,7 +1,7 @@
 "use client";
 
 import { DeliveryLayout } from "@/components/delivery/delivery-layout";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "react-hot-toast";
 
 export default function DeliveryRootLayout({
   children,

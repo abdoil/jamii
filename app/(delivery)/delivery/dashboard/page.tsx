@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/components/ui/use-toast";
+import toast from "react-hot-toast";
 import { ArrowUpRight, Clock, DollarSign, Package, Truck } from "lucide-react";
 
 export default function DeliveryDashboardPage() {
@@ -24,7 +24,6 @@ export default function DeliveryDashboardPage() {
   const { orders, fetchOrders, updateOrderStatus } = useOrdersStore();
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const { toast } = useToast();
 
   useEffect(() => {
     if (!user) {
@@ -54,16 +53,9 @@ export default function DeliveryDashboardPage() {
   const handleUpdateStatus = async (orderId: string, status: OrderStatus) => {
     try {
       await updateOrderStatus(orderId, status);
-      toast({
-        title: "Order updated",
-        description: `Order status changed to ${status}`,
-      });
+      toast.success(`Order status changed to ${status}`);
     } catch (error) {
-      toast({
-        title: "Update failed",
-        description: "Failed to update order status",
-        variant: "destructive",
-      });
+      toast.error("Failed to update order status");
     }
   };
 

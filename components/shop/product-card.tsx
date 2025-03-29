@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useCartStore, type Product } from "@/lib/zustand-store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+import toast from "react-hot-toast";
 import { Minus, Plus, ShoppingCart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -16,14 +16,10 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const [quantity, setQuantity] = useState(1);
   const { addItem } = useCartStore();
-  const { toast } = useToast();
 
   const handleAddToCart = () => {
     addItem(product, quantity);
-    toast({
-      title: "Added to cart",
-      description: `${quantity} x ${product.name} added to your cart`,
-    });
+    toast.success(`${quantity} x ${product.name} added to your cart`);
     setQuantity(1);
   };
 

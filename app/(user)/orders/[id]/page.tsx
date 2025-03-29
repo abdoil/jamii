@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/components/ui/use-toast";
+import toast from "react-hot-toast";
 import {
   ArrowLeft,
   Clock,
@@ -30,7 +30,6 @@ import {
   Check,
   DollarSign,
 } from "lucide-react";
-import { MainNav } from "@/components/main-nav";
 import { ReviewForm } from "@/components/review/review-form";
 import QRCode from "react-qr-code";
 
@@ -107,7 +106,6 @@ export default function OrderDetailsPage({
   const [isLoading, setIsLoading] = useState(true);
   const [deliveryBids, setDeliveryBids] = useState<any[]>([]);
   const router = useRouter();
-  const { toast } = useToast();
 
   // Generate QR code data - memoized to prevent recreation on each render
   const generateQRCodeData = useCallback(
@@ -159,21 +157,13 @@ export default function OrderDetailsPage({
             );
           }
         } else {
-          toast({
-            title: "Order not found",
-            description: "The requested order could not be found",
-            variant: "destructive",
-          });
+          toast.error("Order not found");
           router.push("/orders");
         }
       } catch (error) {
         console.error("Error loading order:", error);
         if (isMounted) {
-          toast({
-            title: "Error",
-            description: "Failed to load order details",
-            variant: "destructive",
-          });
+          toast.error("Failed to load order details");
         }
       } finally {
         if (isMounted) {
@@ -196,10 +186,7 @@ export default function OrderDetailsPage({
         // In a real app, this would be an API call
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        toast({
-          title: "Delivery agent selected",
-          description: "Your order will be delivered by the selected agent",
-        });
+        toast.success("Delivery agent selected");
 
         // Update local state
         const selectedBid = deliveryBids.find((bid) => bid.id === bidId);
@@ -218,11 +205,7 @@ export default function OrderDetailsPage({
           );
         }
       } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to select delivery agent",
-          variant: "destructive",
-        });
+        toast.error("Failed to select delivery agent");
       }
     },
     [deliveryBids, order, toast]
