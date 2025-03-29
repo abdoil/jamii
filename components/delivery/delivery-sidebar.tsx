@@ -43,14 +43,14 @@ export function DeliverySidebar({
     //   active:
     //     pathname === "/delivery/jobs" || pathname.startsWith("/delivery/jobs/"),
     // },
-    {
-      label: "My Deliveries",
-      icon: Truck,
-      href: "/delivery/orders",
-      active:
-        pathname === "/delivery/orders" ||
-        pathname.startsWith("/delivery/orders/"),
-    },
+    // {
+    //   label: "My Deliveries",
+    //   icon: Truck,
+    //   href: "/delivery/orders",
+    //   active:
+    //     pathname === "/delivery/orders" ||
+    //     pathname.startsWith("/delivery/orders/"),
+    // },
     // {
     //   label: "Earnings",
     //   icon: Wallet,

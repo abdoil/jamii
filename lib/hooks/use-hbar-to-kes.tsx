@@ -22,7 +22,7 @@ export const useHbarToKes = (hbarAmount: number) => {
   return useQuery({
     queryKey: ["hbarToKes"],
     queryFn: fetchHbarToKesRate,
-    staleTime: 60000, // Refreshes every 1 min
+    staleTime: 120000, // Refreshes every 2 min
     select: (rate) => ({
       rate,
       converted: hbarAmount * rate, // Convert HBAR to KES

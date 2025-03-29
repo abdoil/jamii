@@ -2,11 +2,10 @@
 
 import type React from "react";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/auth-provider";
-import { DeliveryLayout } from "@/components/delivery/delivery-layout";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,6 +19,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import toast from "react-hot-toast";
 import {
   ArrowLeft,
@@ -29,8 +30,12 @@ import {
   MapPin,
   Package,
   Store,
-  Truck,
   User,
+  CheckCircle2,
+  Timer,
+  AlertCircle,
+  ShoppingBag,
+  Route,
 } from "lucide-react";
 
 // Mock job data
@@ -38,8 +43,8 @@ const getJobData = (id: string) => ({
   id,
   orderId: `ORD-${id.substring(4)}`,
   storeId: "1",
-  storeName: "Fresh Groceries",
-  storeLocation: "123 Market St, Downtown",
+  storeName: "Jamii Supermarket",
+  storeLocation: "Koinange Street, Nairobi, Kenya",
   customerLocation: "456 Park Ave, Uptown",
   distance: "3.5 miles",
   items: 4,
@@ -68,7 +73,17 @@ const getJobData = (id: string) => ({
   ],
 });
 
-export default function JobDetailPage({ params }: { params: { id: string } }) {
+function maskName(name: string): string {
+  const parts = name.split(" ");
+  return parts.map((part) => part[0] + "*".repeat(part.length - 1)).join(" ");
+}
+
+export default function JobDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const resolvedParams = use(params);
   const { user } = useAuth();
   const router = useRouter();
 
@@ -92,10 +107,10 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
     // Simulate loading job data
     setIsLoading(true);
     setTimeout(() => {
-      setJob(getJobData(params.id));
+      setJob(getJobData(resolvedParams.id));
       setIsLoading(false);
     }, 1000);
-  }, [user, router, params.id]);
+  }, [user, router, resolvedParams.id]);
 
   const handleSubmitBid = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,7 +121,7 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       toast.success(
-        `Your bid of $${bidAmount} has been submitted for job #${params.id}`
+        `Your bid of $${bidAmount} has been submitted for job #${resolvedParams.id}`
       );
 
       // Update the job with the new bid
@@ -135,8 +150,74 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
 
   if (isLoading) {
     return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <p>Loading job details...</p>
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <Link
+              href="/delivery/dashboard"
+              className="flex items-center text-sm text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Dashboard
+            </Link>
+            <Skeleton className="mt-2 h-9 w-40" />
+          </div>
+          <Skeleton className="h-6 w-24" />
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-3">
+          <div className="md:col-span-2 space-y-6">
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-4 w-48" />
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-5 w-40" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-5 w-40" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                </div>
+                <Separator />
+                <div className="grid gap-4 md:grid-cols-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="space-y-2">
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-5 w-24" />
+                      <Skeleton className="h-4 w-28" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          <div>
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-4 w-40" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-center">
+                  <Skeleton className="mx-auto h-8 w-24" />
+                  <Skeleton className="mx-auto mt-2 h-4 w-36" />
+                </div>
+              </CardContent>
+              <CardFooter>
+                <div className="w-full space-y-4">
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </CardFooter>
+            </Card>
+          </div>
+        </div>
       </div>
     );
   }
@@ -144,8 +225,9 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
   if (!job) {
     return (
       <div className="flex h-[60vh] flex-col items-center justify-center">
+        <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
         <h2 className="text-2xl font-bold">Job Not Found</h2>
-        <p className="mb-4 text-muted-foreground">
+        <p className="mb-6 text-muted-foreground">
           The requested job could not be found
         </p>
         <Button asChild>
@@ -158,162 +240,228 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
   // Check if user has already bid on this job
   const userBid = job.bids.find((bid: any) => bid.deliveryAgentId === user?.id);
 
+  // Calculate time remaining until deadline
+  const deadlineDate = new Date(job.deadline);
+  const now = new Date();
+  const timeRemaining = deadlineDate.getTime() - now.getTime();
+  const hoursRemaining = Math.floor(timeRemaining / (1000 * 60 * 60));
+  const minutesRemaining = Math.floor(
+    (timeRemaining % (1000 * 60 * 60)) / (1000 * 60)
+  );
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 pb-20 md:pb-10">
       <div className="flex items-center justify-between">
         <div>
           <Link
-            href="/delivery/jobs"
+            href="/delivery/dashboard"
             className="flex items-center text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Jobs
+            Back to Dashboard
           </Link>
-          <h1 className="mt-2 text-3xl font-bold">Job #{params.id}</h1>
+          <div className="mt-2 flex items-center gap-2">
+            <h1 className="text-2xl font-bold md:text-3xl">
+              Job #{resolvedParams.id}
+            </h1>
+            <Badge
+              variant="outline"
+              className="bg-blue-50 text-blue-700 border-blue-200"
+            >
+              Open for Bids
+            </Badge>
+          </div>
         </div>
-        <Badge
-          variant="outline"
-          className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-        >
-          Open for Bids
-        </Badge>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
         <div className="md:col-span-2 space-y-6">
+          {/* Job Overview Card */}
           <Card>
-            <CardHeader>
-              <CardTitle>Delivery Details</CardTitle>
-              <CardDescription>
-                Information about this delivery job
-              </CardDescription>
+            <CardHeader className="pb-2">
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Delivery Details</CardTitle>
+                  <CardDescription>
+                    Information about this delivery job
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-1 text-sm">
+                  <Timer className="h-4 w-4 text-amber-500" />
+                  <span className="font-medium text-amber-600">
+                    {hoursRemaining}h {minutesRemaining}m remaining
+                  </span>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-5">
+              {/* Locations */}
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Store className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">Pickup Location:</span>
+                <div className="rounded-lg border p-3 bg-muted/10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-green-100">
+                      <Store className="h-3.5 w-3.5 text-green-600" />
+                    </div>
+                    <span className="font-medium">Pickup Location</span>
                   </div>
-                  <p>{job.storeName}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {job.storeLocation}
-                  </p>
+                  <div className="ml-9 space-y-1">
+                    <p className="font-medium">{job.storeName}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {job.storeLocation}
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">Delivery Location:</span>
+
+                <div className="rounded-lg border p-3 bg-muted/10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100">
+                      <MapPin className="h-3.5 w-3.5 text-blue-600" />
+                    </div>
+                    <span className="font-medium">Delivery Location</span>
                   </div>
-                  <p>Customer Address</p>
-                  <p className="text-sm text-muted-foreground">
-                    {job.customerLocation}
-                  </p>
+                  <div className="ml-9 space-y-1">
+                    <p className="font-medium">Customer Address</p>
+                    <p className="text-sm text-muted-foreground">
+                      {job.customerLocation}
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <Separator />
+              {/* Job Details */}
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                <div className="flex flex-col items-center justify-center rounded-lg border p-3 bg-muted/5">
+                  <ShoppingBag className="h-5 w-5 text-muted-foreground mb-1" />
+                  <span className="text-sm font-medium">Items</span>
+                  <span className="text-lg font-bold">{job.items}</span>
+                </div>
 
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Package className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">Items:</span>
-                  </div>
-                  <p>{job.items} items</p>
-                  <p className="text-sm text-muted-foreground">
-                    Weight: {job.weight}
-                  </p>
+                <div className="flex flex-col items-center justify-center rounded-lg border p-3 bg-muted/5">
+                  <Package className="h-5 w-5 text-muted-foreground mb-1" />
+                  <span className="text-sm font-medium">Weight</span>
+                  <span className="text-lg font-bold">{job.weight}</span>
                 </div>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Truck className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">Distance:</span>
-                  </div>
-                  <p>{job.distance}</p>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">Deadline:</span>
-                  </div>
-                  <p>{new Date(job.deadline).toLocaleTimeString()}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {new Date(job.deadline).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
 
-              <Separator />
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">Posted:</span>
+                <div className="flex flex-col items-center justify-center rounded-lg border p-3 bg-muted/5">
+                  <Route className="h-5 w-5 text-muted-foreground mb-1" />
+                  <span className="text-sm font-medium">Distance</span>
+                  <span className="text-lg font-bold">{job.distance}</span>
                 </div>
-                <p>{new Date(job.postedAt).toLocaleString()}</p>
+
+                <div className="flex flex-col items-center justify-center rounded-lg border p-3 bg-muted/5">
+                  <Calendar className="h-5 w-5 text-muted-foreground mb-1" />
+                  <span className="text-sm font-medium">Posted</span>
+                  <span className="text-sm font-medium">
+                    {new Date(job.postedAt).toLocaleDateString()}
+                  </span>
+                </div>
               </div>
             </CardContent>
           </Card>
 
+          {/* Current Bids Card */}
           <Card>
-            <CardHeader>
-              <CardTitle>Current Bids</CardTitle>
-              <CardDescription>
-                Bids from delivery agents for this job
-              </CardDescription>
+            <CardHeader className="pb-2">
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Current Bids</CardTitle>
+                  <CardDescription>
+                    {job.bids.length} bids from delivery agents
+                  </CardDescription>
+                </div>
+                {userBid && (
+                  <Badge
+                    variant="outline"
+                    className="bg-blue-50 text-blue-700 border-blue-200"
+                  >
+                    You've Bid
+                  </Badge>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {job.bids.length > 0 ? (
-                <div className="space-y-4">
-                  {job.bids.map((bid: any) => (
-                    <div
-                      key={bid.id}
-                      className="flex items-center justify-between rounded-lg border p-4"
-                    >
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">
-                            {bid.deliveryAgentName}
-                          </span>
-                          {bid.deliveryAgentId === user?.id && (
-                            <Badge
-                              variant="outline"
-                              className="ml-2 bg-blue-100 text-blue-800"
-                            >
-                              Your Bid
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="mt-2 space-y-1 text-sm">
+                <ScrollArea className="max-h-[400px] pr-4">
+                  <div className="space-y-3 pb-2">
+                    {job.bids.map((bid: any) => (
+                      <div
+                        key={bid.id}
+                        className={`rounded-lg border p-3 ${
+                          bid.deliveryAgentId === user?.id
+                            ? "bg-blue-50 border-blue-200"
+                            : ""
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <DollarSign className="h-3 w-3 text-muted-foreground" />
-                            <span>${bid.amount.toFixed(2)}</span>
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                              <User className="h-4 w-4 text-primary" />
+                            </div>
+                            <div>
+                              <div className="font-medium">
+                                {maskName(bid.deliveryAgentName)}
+                                {bid.deliveryAgentId === user?.id && (
+                                  <span className="ml-2 text-xs text-blue-600 font-medium">
+                                    (Your Bid)
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                Bid placed{" "}
+                                {new Date(
+                                  bid.estimatedDeliveryTime
+                                ).toLocaleDateString()}
+                              </div>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-3 w-3 text-muted-foreground" />
-                            <span>
-                              Estimated delivery:{" "}
-                              {new Date(
-                                bid.estimatedDeliveryTime
-                              ).toLocaleTimeString()}
-                            </span>
+                          <Badge
+                            variant="outline"
+                            className="bg-yellow-50 text-yellow-700 border-yellow-200"
+                          >
+                            Pending
+                          </Badge>
+                        </div>
+
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                          <div className="flex items-center gap-2 rounded-md bg-muted/20 p-2">
+                            <DollarSign className="h-4 w-4 text-green-600" />
+                            <div>
+                              <div className="text-xs text-muted-foreground">
+                                Bid Amount
+                              </div>
+                              <div className="font-medium">
+                                KES {bid.amount.toFixed(2)}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 rounded-md bg-muted/20 p-2">
+                            <Clock className="h-4 w-4 text-amber-600" />
+                            <div>
+                              <div className="text-xs text-muted-foreground">
+                                Est. Delivery
+                              </div>
+                              <div className="font-medium">
+                                {new Date(
+                                  bid.estimatedDeliveryTime
+                                ).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                      <Badge
-                        variant="outline"
-                        className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-                      >
-                        Pending
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                </ScrollArea>
               ) : (
                 <div className="flex h-40 flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-                  <p className="text-muted-foreground">No bids yet</p>
+                  <AlertCircle className="h-10 w-10 text-muted-foreground/50 mb-2" />
+                  <p className="text-muted-foreground font-medium">
+                    No bids yet
+                  </p>
                   <p className="text-sm text-muted-foreground">
                     Be the first to bid on this job
                   </p>
@@ -323,32 +471,67 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
           </Card>
         </div>
 
-        <div>
+        <div className="space-y-6">
+          {/* Earnings Card */}
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-2">
               <CardTitle>Estimated Earnings</CardTitle>
               <CardDescription>Potential earnings for this job</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center">
-                <div className="text-3xl font-bold">
-                  ${job.estimatedEarning}
+              <div className="flex flex-col items-center justify-center rounded-lg border p-4 bg-muted/5">
+                <DollarSign className="h-6 w-6 text-green-600 mb-1" />
+                <div className="text-3xl font-bold text-green-600">
+                  KES {job.estimatedEarning}
                 </div>
                 <p className="text-sm text-muted-foreground">
                   Based on distance and items
                 </p>
               </div>
             </CardContent>
-            <CardFooter>
+          </Card>
+
+          {/* Bid Form Card */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle>{userBid ? "Your Bid" : "Place Your Bid"}</CardTitle>
+              <CardDescription>
+                {userBid
+                  ? "You've already submitted a bid for this job"
+                  : "Submit your bid for this delivery job"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
               {userBid ? (
-                <div className="w-full space-y-4">
-                  <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-950">
-                    <p className="font-medium">
-                      You've already bid on this job
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Your bid: ${userBid.amount.toFixed(2)}
-                    </p>
+                <div className="space-y-4">
+                  <div className="rounded-lg bg-blue-50 p-4 border border-blue-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCircle2 className="h-5 w-5 text-blue-600" />
+                      <p className="font-medium">Bid Submitted</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 mt-3">
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          Your Bid
+                        </p>
+                        <p className="text-lg font-bold">
+                          KES {userBid.amount.toFixed(2)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          Est. Delivery Time
+                        </p>
+                        <p className="text-sm font-medium">
+                          {new Date(
+                            userBid.estimatedDeliveryTime
+                          ).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                   <Button
                     variant="outline"
@@ -359,32 +542,50 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
                   </Button>
                 </div>
               ) : (
-                <form onSubmit={handleSubmitBid} className="w-full space-y-4">
+                <form onSubmit={handleSubmitBid} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="bidAmount">Your Bid Amount ($)</Label>
-                    <Input
-                      id="bidAmount"
-                      type="number"
-                      step="0.01"
-                      min="1"
-                      value={bidAmount}
-                      onChange={(e) => setBidAmount(e.target.value)}
-                      required
-                    />
+                    <Label htmlFor="bidAmount" className="text-sm">
+                      Your Bid Amount (KES)
+                    </Label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        id="bidAmount"
+                        type="number"
+                        step="0.01"
+                        min="1"
+                        value={bidAmount}
+                        onChange={(e) => setBidAmount(e.target.value)}
+                        className="pl-9"
+                        required
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Suggested range: KES {job.estimatedEarning}
+                    </p>
                   </div>
+
                   <div className="space-y-2">
-                    <Label htmlFor="estimatedTime">
+                    <Label htmlFor="estimatedTime" className="text-sm">
                       Estimated Delivery Time (minutes)
                     </Label>
-                    <Input
-                      id="estimatedTime"
-                      type="number"
-                      min="15"
-                      value={estimatedTime}
-                      onChange={(e) => setEstimatedTime(e.target.value)}
-                      required
-                    />
+                    <div className="relative">
+                      <Clock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        id="estimatedTime"
+                        type="number"
+                        min="15"
+                        value={estimatedTime}
+                        onChange={(e) => setEstimatedTime(e.target.value)}
+                        className="pl-9"
+                        required
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Minimum 15 minutes
+                    </p>
                   </div>
+
                   <Button
                     type="submit"
                     className="w-full"
@@ -394,7 +595,7 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
                   </Button>
                 </form>
               )}
-            </CardFooter>
+            </CardContent>
           </Card>
         </div>
       </div>
