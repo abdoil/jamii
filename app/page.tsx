@@ -15,9 +15,10 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Search, ShoppingBag, Truck, Shield } from "lucide-react";
+import { Search, ShoppingBag, Truck, Shield, ArrowRight } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { Header } from "@/components/header";
+import Footer from "@/components/landing/footer";
 
 export default function HomePage() {
   const { products, isLoading, fetchProducts } = useProductsStore();
@@ -67,6 +68,137 @@ export default function HomePage() {
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
 
+      <section className="relative pt-16 pb-24 md:pb-32 overflow-hidden">
+        {/* Background elements */}
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-white to-white z-0"></div>
+        <div className="absolute top-1/4 right-0 w-64 h-64 bg-orange-100 rounded-full blur-3xl opacity-40 -z-10"></div>
+        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-orange-100 rounded-full blur-3xl opacity-30 -z-10"></div>
+
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="space-y-8">
+              <div>
+                <div className="inline-flex items-center px-3 py-1 rounded-full bg-primary text-white text-sm font-medium mb-6">
+                  Smart Supply Chain Technology
+                </div>
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
+                  Supply Chain, <br />
+                  <span className="text-primary">Reimagined</span>
+                </h1>
+                <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-xl leading-relaxed">
+                  Connect, trade, and deliver with unprecedented transparency
+                  and security on our blockchain-powered platform.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-4">
+                <Button
+                  size="lg"
+                  className="h-12 px-6 bg-primary hover:bg-primary/80"
+                >
+                  Get Started
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+                <Button size="lg" variant="outline" className="h-12 px-6">
+                  Learn More
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap gap-8 pt-4">
+                <div className="flex items-center gap-2">
+                  <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                    <svg
+                      className="h-5 w-5 text-green-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </div>
+                  <span className="text-slate-700">Transparent</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                    <svg
+                      className="h-5 w-5 text-green-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </div>
+                  <span className="text-slate-700">Secure</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                    <svg
+                      className="h-5 w-5 text-green-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </div>
+                  <span className="text-muted-foreground">Efficient</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative hidden md:block">
+              <div className="absolute -top-8 -left-8 w-full h-full bg-primary/10 rounded-2xl transform rotate-3"></div>
+              <img
+                src="https://images.unsplash.com/photo-1551825687-f9de1603ed8b?q=80&w=2069&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                alt="Supply Chain Visualization"
+                className="relative z-10 w-full h-auto rounded-2xl shadow-lg"
+              />
+              <div className="absolute -bottom-6 -right-6 bg-white p-4 rounded-xl shadow-lg z-20 max-w-xs">
+                <div className="flex items-center gap-3">
+                  <div className="flex-shrink-0 h-12 w-12 bg-primary rounded-full flex items-center justify-center">
+                    <svg
+                      className="h-6 w-6 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium">Verified by Blockchain</p>
+                    <p className="text-xs text-muted-foreground">
+                      Immutable and secure
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Hero Section */}
       <section className="py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-background z-0"></div>
@@ -96,60 +228,60 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-6 bg-muted/30">
-        <div className="container">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold mb-2">
-              Why Choose Us
+      <section id="features" className="py-10 bg-slate-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center  mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Why Choose Jamii
             </h2>
-            <p className="text-muted-foreground text-sm max-w-2xl mx-auto">
-              Our platform combines cutting-edge technology with intuitive
-              design to transform logistics.
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Our platform combines cutting-edge blockchain technology with
+              intuitive design to transform how supply chains work.
             </p>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="bg-background p-5 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <ShoppingBag className="h-4 w-4 text-primary" />
+          <div className="grid gap-8 md:grid-cols-3">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
+                  <ShoppingBag className="h-6 w-6 text-white" />
                 </div>
-                <h3 className="text-base font-semibold">
+                <h3 className="text-xl font-semibold">
                   Transparent Marketplace
                 </h3>
               </div>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-muted-foreground">
                 Every transaction is verified and recorded on the blockchain,
-                ensuring complete transparency and trust.
+                ensuring complete transparency and trust between all parties.
               </p>
             </div>
 
-            <div className="bg-background p-5 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Truck className="h-4 w-4 text-primary" />
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
+                  <Truck className="h-6 w-6 text-white" />
                 </div>
-                <h3 className="text-base font-semibold">
+                <h3 className="text-xl font-semibold">
                   Smart Delivery Network
                 </h3>
               </div>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-muted-foreground">
                 Our competitive bidding system connects you with the most
-                efficient delivery partners for your needs.
+                efficient delivery partners for your specific needs.
               </p>
             </div>
 
-            <div className="bg-background p-5 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Shield className="h-4 w-4 text-primary" />
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
+                  <Shield className="h-6 w-6 text-white" />
                 </div>
-                <h3 className="text-base font-semibold">
+                <h3 className="text-xl font-semibold">
                   Secure Smart Contracts
                 </h3>
               </div>
-              <p className="text-muted-foreground text-sm">
-                Hedera-powered smart contracts protect your payments with
+              <p className="text-muted-foreground">
+                Blockchain-powered smart contracts protect your payments with
                 automated escrow and verification systems.
               </p>
             </div>
@@ -254,92 +386,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer className="py-12 bg-muted/30 border-t">
-        <div className="container">
-          <div className="grid gap-8 md:grid-cols-4">
-            <div>
-              <Image
-                src="/placeholder.svg?height=40&width=180"
-                alt="Jamii"
-                width={180}
-                height={40}
-                className="mb-4"
-              />
-              <p className="text-muted-foreground">
-                Transforming supply chains with blockchain technology for a more
-                transparent, efficient future.
-              </p>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-lg mb-4">Quick Links</h4>
-              <ul className="space-y-2">
-                <li>
-                  <Link
-                    href="/shop"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Shop
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/auth/signup"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Register
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/auth/signin"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Login
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-lg mb-4">Business</h4>
-              <ul className="space-y-2">
-                <li>
-                  <Link
-                    href="/auth/signin"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Business Login
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/auth/store-signup"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Become a Partner
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-lg mb-4">Contact</h4>
-              <p className="text-muted-foreground">
-                info@jamii.online
-                <br />
-                +254 712 345 678
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-12 pt-6 border-t text-center">
-            <p className="text-sm text-muted-foreground">
-              &copy; {new Date().getFullYear()} Jamii. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

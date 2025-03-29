@@ -43,7 +43,7 @@ export function ProductCard({ product }: ProductCardProps) {
     <Card className="overflow-hidden group transition-all duration-300 hover:shadow-md">
       <div className="relative aspect-square w-full overflow-hidden">
         <Image
-          src={product.image || "/placeholder.svg"}
+          src={product.image || "/placeholder.jpg"}
           alt={product.name}
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-105"

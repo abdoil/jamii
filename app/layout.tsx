@@ -14,7 +14,7 @@ const merriweather = Merriweather({
 });
 
 export const metadata: Metadata = {
-  title: "Jamii",
+  title: "Jamii | A decentralized supply chain platform",
   description: "A decentralized logistics and supply chain platform",
 };
 
