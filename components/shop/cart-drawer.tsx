@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/lib/zustand-store";
@@ -23,6 +23,7 @@ interface CartDrawerProps {
 
 export function CartDrawer({ onCheckout }: CartDrawerProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const {
     items,
     removeItem,
@@ -34,6 +35,10 @@ export function CartDrawer({ onCheckout }: CartDrawerProps) {
   const { user, isWalletConnected, connectWallet } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleCheckout = async () => {
     if (!user) {
@@ -97,7 +102,7 @@ export function CartDrawer({ onCheckout }: CartDrawerProps) {
       <SheetTrigger asChild>
         <Button variant="outline" size="icon" className="relative">
           <ShoppingCart className="h-5 w-5" />
-          {getTotalItems() > 0 && (
+          {mounted && getTotalItems() > 0 && (
             <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
               {getTotalItems()}
             </span>
@@ -126,7 +131,7 @@ export function CartDrawer({ onCheckout }: CartDrawerProps) {
                 >
                   <div className="relative h-16 w-16 overflow-hidden rounded-md">
                     <Image
-                      src={item.product.image || "/placeholder.svg"}
+                      src={item.product.image || "/placeholder.jpg"}
                       alt={item.product.name}
                       fill
                       className="object-cover"
@@ -135,7 +140,7 @@ export function CartDrawer({ onCheckout }: CartDrawerProps) {
                   <div className="flex-1 space-y-1">
                     <h4 className="font-medium">{item.product.name}</h4>
                     <p className="text-sm text-muted-foreground">
-                      ${item.product.price.toFixed(2)} each
+                      KES {item.product.price.toFixed(2)} each
                     </p>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -180,7 +185,7 @@ export function CartDrawer({ onCheckout }: CartDrawerProps) {
             <div className="space-y-4 py-4">
               <div className="flex items-center justify-between">
                 <span>Subtotal</span>
-                <span>${getTotalPrice().toFixed(2)}</span>
+                <span>KES {getTotalPrice().toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Delivery Fee</span>
@@ -189,7 +194,7 @@ export function CartDrawer({ onCheckout }: CartDrawerProps) {
               <Separator />
               <div className="flex items-center justify-between font-medium">
                 <span>Total</span>
-                <span>${getTotalPrice().toFixed(2)}</span>
+                <span>KES {getTotalPrice().toFixed(2)}</span>
               </div>
               <div className="flex space-x-2">
                 <Button

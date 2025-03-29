@@ -96,11 +96,10 @@ export default function HomePage() {
                   size="lg"
                   className="h-12 px-6 bg-primary hover:bg-primary/80"
                 >
-                  Get Started
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <Link href="/auth/signup">Get Started</Link>
                 </Button>
                 <Button size="lg" variant="outline" className="h-12 px-6">
-                  Learn More
+                  <Link href="/auth/signup">Learn More</Link>
                 </Button>
               </div>
 
@@ -121,7 +120,7 @@ export default function HomePage() {
                       />
                     </svg>
                   </div>
-                  <span className="text-slate-700">Transparent</span>
+                  <span className="text-foreground">Transparent</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
@@ -139,7 +138,7 @@ export default function HomePage() {
                       />
                     </svg>
                   </div>
-                  <span className="text-slate-700">Secure</span>
+                  <span className="text-foreground">Secure</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
@@ -157,7 +156,7 @@ export default function HomePage() {
                       />
                     </svg>
                   </div>
-                  <span className="text-muted-foreground">Efficient</span>
+                  <span className="text-foreground">Efficient</span>
                 </div>
               </div>
             </div>
@@ -194,34 +193,6 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Hero Section */}
-      <section className="py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-background z-0"></div>
-        <div className="container relative z-10">
-          <div className="max-w-3xl mx-auto text-center space-y-6">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
-              Supply Chain, <span className="text-primary">Reimagined</span>
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Connect, trade, and deliver with unprecedented transparency and
-              security on our blockchain-powered shopping platform.
-            </p>
-            <div className="flex flex-wrap gap-4 justify-center pt-4">
-              <Link href="/auth/signup">
-                <Button size="lg" className="h-12 px-8">
-                  Get Started
-                </Button>
-              </Link>
-              <Link href="#features">
-                <Button size="lg" variant="outline" className="h-12 px-8">
-                  Learn More
-                </Button>
-              </Link>
             </div>
           </div>
         </div>

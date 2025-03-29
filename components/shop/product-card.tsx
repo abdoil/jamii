@@ -63,8 +63,8 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* Price badge positioned on the image */}
         <div className="absolute bottom-2 left-2 bg-background/90 px-2 py-1 rounded-md shadow-sm">
-          <span className="font-bold text-primary">
-            ${product.price.toFixed(2)}
+          <span className="font-bold text-foreground">
+            KES {product.price.toFixed(2)}
           </span>
         </div>
       </div>

@@ -23,7 +23,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, Loader2, Wallet } from "lucide-react";
 import Link from "next/link";
-
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 export default function CheckoutPage() {
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
@@ -174,28 +180,29 @@ export default function CheckoutPage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="state">State</Label>
-                      <Input
-                        id="state"
-                        placeholder="State"
-                        value={state}
-                        onChange={(e) => setState(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="zipCode">ZIP Code</Label>
-                      <Input
-                        id="zipCode"
-                        placeholder="ZIP Code"
-                        value={zipCode}
-                        onChange={(e) => setZipCode(e.target.value)}
-                        required
-                      />
+                      <div>
+                        <Label htmlFor="state">County</Label>
+                        <Select
+                          value={state}
+                          onValueChange={(value) => setState(value)}
+                          required
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a county" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Nairobi">Nairobi</SelectItem>
+                            <SelectItem value="Mombasa">Mombasa</SelectItem>
+                            <SelectItem value="Kisumu">Kisumu</SelectItem>
+                            <SelectItem value="Nakuru">Nakuru</SelectItem>
+                            <SelectItem value="Eldoret">Eldoret</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   </div>
 
-                  <div>
+                  {/* <div>
                     <Label htmlFor="notes">Delivery Notes (Optional)</Label>
                     <Textarea
                       id="notes"
@@ -204,7 +211,7 @@ export default function CheckoutPage() {
                       onChange={(e) => setNotes(e.target.value)}
                       className="min-h-[100px]"
                     />
-                  </div>
+                  </div> */}
                 </div>
 
                 <div className="flex justify-end">
