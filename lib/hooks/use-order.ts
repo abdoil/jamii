@@ -121,8 +121,33 @@ export type Order = {
   totalAmount: number;
   deliveryAddress: string;
   deliveryAgentId?: string;
+  deliveryFee?: number;
+  deliveryCode?: string;
+  transactionId?: string;
+  bidTransactionId?: string;
+  deliveryTransactionId?: string;
+  hashscanUrl?: string;
   createdAt: string;
   updatedAt: string;
+  transactions: {
+    orderPlaced: {
+      amount: number;
+      timestamp: string;
+      transactionId: string;
+    };
+    bidPlaced?: {
+      amount: number;
+      timestamp: string;
+      transactionId: string;
+      deliveryAgentId: string;
+    };
+    deliveryConfirmed?: {
+      amount: number;
+      timestamp: string;
+      transactionId: string;
+      deliveryAgentId: string;
+    };
+  };
 };
 
 export function useGetOrder(orderId: string) {

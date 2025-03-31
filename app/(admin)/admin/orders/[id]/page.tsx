@@ -26,6 +26,7 @@ import {
   Package,
   Truck,
   User,
+  ShoppingBag,
 } from "lucide-react";
 import type { Order, OrderStatus } from "@/lib/zustand-store";
 import { QRGenerator } from "@/components/qr-code/qr-generator";
@@ -36,43 +37,9 @@ import {
 } from "@/lib/hooks/use-order";
 import { use } from "react";
 import { useOrdersStore, useProductsStore } from "@/lib/zustand-store";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { useGetBids } from "@/lib/hooks/use-bids";
 import { useContract } from "@/lib/hooks/use-contract";
-
-// Mock delivery bids
-const deliveryBids = [
-  {
-    id: "bid-1",
-    orderId: "2",
-    deliveryAgentId: "3",
-    deliveryAgentName: "John Delivery",
-    amount: 5.0,
-    estimatedDeliveryTime: "2023-05-15T14:00:00Z",
-    status: "pending",
-  },
-  {
-    id: "bid-2",
-    orderId: "2",
-    deliveryAgentId: "4",
-    deliveryAgentName: "Sarah Express",
-    amount: 6.5,
-    estimatedDeliveryTime: "2023-05-15T13:30:00Z",
-    status: "pending",
-  },
-];
-
-// Mock customer data
-const customer = {
-  id: "1",
-  name: "John Customer",
-  email: "customer@example.com",
-  phone: "+1 (555) 123-4567",
-  address: "456 Park Ave, Uptown, USA",
-  orders: 5,
-  totalSpent: 124.85,
-  joinedDate: "2023-01-10T00:00:00Z",
-};
 
 export default function AdminOrderDetailPage({
   params,
@@ -88,7 +55,11 @@ export default function AdminOrderDetailPage({
     data: order,
     isLoading: isOrderLoading,
     refetch: refetchOrder,
-  } = useGetOrder(resolvedParams.id);
+  } = useGetOrder(resolvedParams.id) as unknown as {
+    data: Order | null;
+    isLoading: boolean;
+    refetch: () => Promise<void>;
+  };
   const { data: products, isLoading: isProductsLoading } = useGetProducts();
   const { data: bids } = useGetBids(resolvedParams.id);
   const updateOrderStatus = useUpdateOrderStatus();
@@ -123,7 +94,7 @@ export default function AdminOrderDetailPage({
         orderId: resolvedParams.id,
         status,
       });
-      toast.success(`Order status changed to KES {status}`);
+      toast.success(`Order status changed to ${status}`);
     } catch (error) {
       toast.error("Failed to update order status");
     }
@@ -146,7 +117,7 @@ export default function AdminOrderDetailPage({
       // Then, interact with the smart contract
       await placeBid.mutateAsync({
         orderId: resolvedParams.id,
-        amount: order?.deliveryFee || 0,
+        amount: order?.transactions?.bidPlaced?.amount || 0,
       });
 
       // Refresh order data
@@ -226,21 +197,6 @@ export default function AdminOrderDetailPage({
           </Badge>
         );
     }
-  };
-
-  // Inside the component, add this function to generate QR code data
-  const generateQRCodeData = (orderId: string, type: "pickup" | "delivery") => {
-    // Create a data object with order ID, type, and timestamp for security
-    const qrData = {
-      orderId,
-      type,
-      timestamp: Date.now(),
-      // In a real app, you would add a signature or token for verification
-      signature: `${orderId}-${type}-${Date.now()}`,
-    };
-
-    // Convert to JSON string
-    return JSON.stringify(qrData);
   };
 
   if (isLoading) {
@@ -556,39 +512,12 @@ export default function AdminOrderDetailPage({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {order.bidTransactionId && (
+                {order.transactionId && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Package className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">Bid Transaction</span>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          navigator.clipboard.writeText(
-                            order.bidTransactionId || ""
-                          );
-                          toast.success("Transaction ID copied to clipboard");
-                        }}
-                      >
-                        Copy ID
-                      </Button>
-                    </div>
-                    <div className="text-sm text-muted-foreground break-all">
-                      {order.bidTransactionId}
-                    </div>
-                  </div>
-                )}
-                {order.deliveryTransactionId && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Truck className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">
-                          Delivery Transaction
-                        </span>
+                        <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">Order Placement</span>
                       </div>
                       <div className="flex gap-2">
                         <Button
@@ -596,36 +525,131 @@ export default function AdminOrderDetailPage({
                           size="sm"
                           onClick={() => {
                             navigator.clipboard.writeText(
-                              order.deliveryTransactionId || ""
+                              order.transactionId || ""
                             );
                             toast.success("Transaction ID copied to clipboard");
                           }}
                         >
                           Copy ID
                         </Button>
-                        {order.hashscanUrl && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            window.open(
+                              `https://hashscan.io/testnet/tx/${order.transactionId}`,
+                              "_blank"
+                            )
+                          }
+                        >
+                          View on Hashscan
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="text-sm text-muted-foreground break-all">
+                      {order.transactionId}
+                    </div>
+                  </div>
+                )}
+                {order.transactions?.bidPlaced && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Package className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">Bid Transaction</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            navigator.clipboard.writeText(
+                              order.transactions?.bidPlaced?.transactionId || ""
+                            );
+                            toast.success("Transaction ID copied to clipboard");
+                          }}
+                        >
+                          Copy ID
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            window.open(
+                              `https://hashscan.io/testnet/tx/${
+                                order.transactions?.bidPlaced?.transactionId ||
+                                ""
+                              }`,
+                              "_blank"
+                            )
+                          }
+                        >
+                          View on Hashscan
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="text-sm text-muted-foreground break-all">
+                      {order.transactions.bidPlaced.transactionId}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Amount: KES {order.transactions.bidPlaced.amount}
+                    </div>
+                  </div>
+                )}
+                {order.status === "delivered" &&
+                  order.deliveryTransactionId && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Truck className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">
+                            Delivery Transaction
+                          </span>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              navigator.clipboard.writeText(
+                                order.deliveryTransactionId || ""
+                              );
+                              toast.success(
+                                "Transaction ID copied to clipboard"
+                              );
+                            }}
+                          >
+                            Copy ID
+                          </Button>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() =>
-                              window.open(order.hashscanUrl, "_blank")
+                              window.open(
+                                `https://hashscan.io/testnet/tx/${order.deliveryTransactionId}`,
+                                "_blank"
+                              )
                             }
                           >
                             View on Hashscan
                           </Button>
-                        )}
+                        </div>
+                      </div>
+                      <div className="text-sm text-muted-foreground break-all">
+                        {order.deliveryTransactionId}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Delivery Fee: KES {order.deliveryFee}
                       </div>
                     </div>
-                    <div className="text-sm text-muted-foreground break-all">
-                      {order.deliveryTransactionId}
+                  )}
+                {!order.transactionId &&
+                  !order.transactions?.bidPlaced &&
+                  !order.deliveryTransactionId && (
+                    <div className="text-sm text-muted-foreground">
+                      No blockchain transactions recorded yet
                     </div>
-                  </div>
-                )}
-                {!order.bidTransactionId && !order.deliveryTransactionId && (
-                  <div className="text-sm text-muted-foreground">
-                    No blockchain transactions recorded yet
-                  </div>
-                )}
+                  )}
               </div>
             </CardContent>
           </Card>
@@ -642,10 +666,10 @@ export default function AdminOrderDetailPage({
             {order.status === "confirmed" && (
               <Button
                 onClick={handleConfirmDelivery}
-                disabled={confirmDelivery.isLoading}
+                disabled={confirmDelivery.isPending}
                 className="w-full"
               >
-                {confirmDelivery.isLoading
+                {confirmDelivery.isPending
                   ? "Confirming Delivery..."
                   : "Confirm Delivery"}
               </Button>
@@ -655,10 +679,10 @@ export default function AdminOrderDetailPage({
                 <Button
                   key={bid.id}
                   onClick={() => handleAcceptBid(bid.id)}
-                  disabled={placeBid.isLoading}
+                  disabled={placeBid.isPending}
                   className="w-full"
                 >
-                  {placeBid.isLoading ? "Accepting Bid..." : "Accept Bid"}
+                  {placeBid.isPending ? "Accepting Bid..." : "Accept Bid"}
                 </Button>
               ))}
           </div>

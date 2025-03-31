@@ -34,6 +34,7 @@ export function useGetBids(orderIds: string) {
 export function useCreateBid() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { placeBid } = useContract();
 
   return useMutation({
     mutationFn: async ({
@@ -45,6 +46,13 @@ export function useCreateBid() {
       amount: number;
       estimatedDeliveryTime: string;
     }) => {
+      // First, place the bid on the smart contract
+      const contractResponse = await placeBid.mutateAsync({
+        orderId,
+        amount,
+      });
+
+      // Then create the bid in the database with transaction details
       const response = await fetch(`/api/orders/${orderId}/bids`, {
         method: "POST",
         headers: {
@@ -53,6 +61,9 @@ export function useCreateBid() {
         body: JSON.stringify({
           amount,
           estimatedDeliveryTime,
+          transactionId: contractResponse.transactionId,
+          hashscanUrl: contractResponse.hashscanUrl,
+          blockchainStatus: contractResponse.details.status,
         }),
       });
 

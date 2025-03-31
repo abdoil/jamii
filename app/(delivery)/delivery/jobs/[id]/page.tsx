@@ -276,6 +276,50 @@ export default function JobDetailPage({
               </div>
             </CardHeader>
             <CardContent className="p-3 space-y-4">
+              {/* Delivery Transaction Details */}
+              {order.status === "delivered" && (
+                <div className="rounded-lg border p-2.5 bg-green-50 border-green-200">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <span className="text-xs font-medium">
+                      Delivery Confirmed
+                    </span>
+                  </div>
+                  <div className="ml-5.5 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">
+                        Transaction ID
+                      </span>
+                      <span className="text-xs font-medium">
+                        {order.deliveryTransactionId}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">
+                        Delivery Fee
+                      </span>
+                      <span className="text-xs font-medium">
+                        KES {order.deliveryFee}
+                      </span>
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full mt-2"
+                      onClick={() =>
+                        window.open(
+                          `https://hashscan.io/testnet/tx/${order.deliveryTransactionId}`,
+                          "_blank"
+                        )
+                      }
+                    >
+                      View on Hashscan
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {/* Locations */}
               <div className="grid gap-3 md:grid-cols-2">
                 <div className="rounded-lg border p-2.5 bg-muted/10">

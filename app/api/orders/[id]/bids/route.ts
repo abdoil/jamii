@@ -75,12 +75,8 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { amount, estimatedDeliveryTime } = await request.json();
-
-    // Generate a unique transaction ID
-    const transactionId = `tx_${Date.now()}_${Math.random()
-      .toString(36)
-      .substr(2, 9)}`;
+    const { amount, estimatedDeliveryTime, transactionId } =
+      await request.json();
 
     const bidData = {
       orderId: params.id,
