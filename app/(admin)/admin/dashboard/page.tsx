@@ -27,8 +27,23 @@ import {
   Package,
   ShoppingCart,
   Truck,
+  Wallet,
+  Copy,
+  PlusCircle,
+  ArrowDownLeft,
+  Coins,
+  Timer,
+  MapPin,
+  ChevronRight,
+  Info,
+  Filter,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 import { useUpdateOrderStatus } from "@/lib/hooks/use-order";
+import { HbarConverter } from "@/components/hbar-converter";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export default function AdminDashboardPage() {
   const { user } = useAuth();
@@ -55,12 +70,16 @@ export default function AdminDashboardPage() {
         await Promise.all([fetchOrders(user.id, "admin"), fetchProducts()]);
       } catch (error) {
         console.error("Error loading data:", error);
+        toast.error("Failed to load orders");
       } finally {
         setIsLoading(false);
       }
     };
 
     loadData();
+    // Refresh data every 30 seconds
+    const interval = setInterval(loadData, 30000);
+    return () => clearInterval(interval);
   }, [user, router, fetchOrders, fetchProducts]);
 
   const handleUpdateStatus = async (orderId: string, status: OrderStatus) => {
@@ -83,6 +102,29 @@ export default function AdminDashboardPage() {
     0
   );
   const totalProducts = products.length;
+  const confirmedOrders = orders.filter(
+    (order) => order.status === "confirmed"
+  ).length;
+  const inTransitOrders = orders.filter(
+    (order) => order.status === "in-transit"
+  ).length;
+  const deliveredOrders = orders.filter(
+    (order) => order.status === "delivered"
+  ).length;
+  const cancelledOrders = orders.filter(
+    (order) => order.status === "cancelled"
+  ).length;
+  const totalDeliveryFees = orders.reduce(
+    (sum, order) => sum + order.totalAmount * 0.1,
+    0
+  );
+  const totalProfit = totalRevenue - totalDeliveryFees;
+
+  // Mock wallet balance (replace with actual data)
+  const walletBalance = {
+    hbar: 54.7,
+    kes: 5470, // 1 HBAR = 100 KES
+  };
 
   const getStatusBadge = (status: OrderStatus) => {
     switch (status) {
@@ -135,246 +177,301 @@ export default function AdminDashboardPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Store Dashboard</h1>
-        <p className="text-muted-foreground">
-          Manage your store, products, and orders
-        </p>
-      </div>
+    <div className="flex flex-col gap-4 pb-20 md:pb-10">
+      {/* Header with Wallet Summary */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight md:text-2xl">
+            Admin Dashboard
+          </h1>
+          <p className="text-xs text-muted-foreground md:text-sm">
+            Manage orders and track revenue
+          </p>
+        </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${totalRevenue.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">
-              From {totalOrders} orders
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Pending Orders
-            </CardTitle>
-            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{pendingOrders}</div>
-            <p className="text-xs text-muted-foreground">
-              Awaiting confirmation
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Products
-            </CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalProducts}</div>
-            <p className="text-xs text-muted-foreground">In your inventory</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Completed Orders
-            </CardTitle>
-            <Truck className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {orders.filter((order) => order.status === "delivered").length}
+        {/* Compact Wallet Summary */}
+        <div className="flex items-center gap-3 p-2 rounded-lg border bg-card">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
+              <Wallet className="h-3.5 w-3.5 text-primary" />
             </div>
-            <p className="text-xs text-muted-foreground">
-              Successfully delivered
-            </p>
+            <div>
+              <div className="flex items-baseline gap-1 text-sm">
+                <HbarConverter amount={walletBalance.hbar} />
+                <span className="text-xs text-muted-foreground">
+                  (KES {walletBalance.kes.toLocaleString()})
+                </span>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                ID: {user?.hederaAccountId}
+              </div>
+            </div>
+          </div>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right">
+              <h2 className="sr-only">Hedera Wallet Details</h2>
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-medium flex items-center gap-2">
+                    <Wallet className="h-5 w-5" /> Hedera Wallet
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Manage your wallet and transactions
+                  </p>
+                </div>
+
+                <div className="rounded-lg border p-4 bg-muted/30">
+                  <div className="text-sm font-medium">Available Balance</div>
+                  <div className="mt-1">
+                    <HbarConverter amount={walletBalance.hbar} />
+                    <div className="text-sm text-muted-foreground">
+                      KES {walletBalance.kes.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div>
+                    <label className="text-sm font-medium">Account ID</label>
+                    <div className="mt-1 flex items-center gap-2">
+                      <code className="rounded bg-muted px-2 py-1 text-xs flex-1 overflow-hidden text-ellipsis">
+                        {user?.hederaAccountId || "Not connected"}
+                      </code>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7 shrink-0"
+                        onClick={() => {
+                          if (user?.hederaAccountId) {
+                            navigator.clipboard.writeText(user.hederaAccountId);
+                            toast.success("Account ID copied");
+                          }
+                        }}
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                  <Separator className="my-2" />
+                  <div>
+                    <label className="text-sm font-medium">Public Key</label>
+                    <div className="mt-1 flex items-center gap-2">
+                      <code className="rounded bg-muted px-2 py-1 text-xs flex-1 overflow-hidden text-ellipsis">
+                        {user?.hederaPublicKey || "Not connected"}
+                      </code>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7 shrink-0"
+                        onClick={() => {
+                          if (user?.hederaPublicKey) {
+                            navigator.clipboard.writeText(user.hederaPublicKey);
+                            toast.success("Public Key copied");
+                          }
+                        }}
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <Button className="w-full">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Load Wallet
+                  </Button>
+                  <Button variant="outline" className="w-full">
+                    <ArrowDownLeft className="mr-2 h-4 w-4" />
+                    Withdraw
+                  </Button>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+      </div>
+
+      {/* Stats Overview */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Card className="border-l-4 border-l-primary">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">
+                  Total Revenue
+                </p>
+                <p className="text-lg font-bold md:text-xl">
+                  KES {totalRevenue.toFixed(2)}
+                </p>
+              </div>
+              <div className="rounded-full bg-primary/10 p-1.5">
+                <DollarSign className="h-3.5 w-3.5 text-primary" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-blue-500">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">
+                  Delivery Fees
+                </p>
+                <p className="text-lg font-bold md:text-xl">
+                  KES {totalDeliveryFees.toFixed(2)}
+                </p>
+              </div>
+              <div className="rounded-full bg-blue-500/10 p-1.5">
+                <Coins className="h-3.5 w-3.5 text-blue-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-amber-500">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">
+                  Net Profit
+                </p>
+                <p className="text-lg font-bold md:text-xl">
+                  KES {totalProfit.toFixed(2)}
+                </p>
+              </div>
+              <div className="rounded-full bg-amber-500/10 p-1.5">
+                <Package className="h-3.5 w-3.5 text-amber-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-green-500">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">
+                  Total Orders
+                </p>
+                <p className="text-lg font-bold md:text-xl">{totalOrders}</p>
+              </div>
+              <div className="rounded-full bg-green-500/10 p-1.5">
+                <ShoppingCart className="h-3.5 w-3.5 text-green-500" />
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      <Tabs defaultValue="orders" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="orders">Orders</TabsTrigger>
-          <TabsTrigger value="products">Products</TabsTrigger>
-        </TabsList>
-        <TabsContent value="orders" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Orders</CardTitle>
-              <CardDescription>
-                Manage and process your store orders
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="flex h-40 items-center justify-center">
-                  <p>Loading orders...</p>
+      {/* Order Status Overview */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+        <Card>
+          <CardHeader className="p-4 pb-0">
+            <CardTitle className="text-sm font-medium">Order Status</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-yellow-500" />
+                  <span className="text-sm">Pending</span>
                 </div>
-              ) : orders.length > 0 ? (
-                <div className="space-y-4">
-                  {orders.slice(0, 5).map((order) => (
-                    <div key={order.id} className="rounded-lg border p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div>
-                          <h3 className="font-medium">Order #{order.id}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(order.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {getStatusBadge(order.status)}
-                          <span className="font-medium">
-                            ${order.totalAmount.toFixed(2)}
-                          </span>
-                        </div>
-                      </div>
-                      <Separator className="my-2" />
-                      <div className="space-y-1">
-                        <p className="text-sm">
-                          <span className="font-medium">Delivery:</span>{" "}
-                          {order.deliveryAddress}
-                        </p>
-                        <p className="text-sm">
-                          <span className="font-medium">Items:</span>{" "}
-                          {order.products.length} products
-                        </p>
-                      </div>
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {order.status === "pending" && (
-                          <Button
-                            size="sm"
-                            onClick={() =>
-                              handleUpdateStatus(order.id, "confirmed")
-                            }
-                          >
-                            Confirm Order
-                          </Button>
-                        )}
-                        {order.status === "confirmed" && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              handleUpdateStatus(order.id, "in-transit")
-                            }
-                          >
-                            Mark as In Transit
-                          </Button>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            router.push(`/admin/orders/${order.id}`)
-                          }
-                        >
-                          View Details
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex h-40 flex-col items-center justify-center">
-                  <p className="text-muted-foreground">No orders found</p>
-                  <p className="text-sm text-muted-foreground">
-                    Orders will appear here when customers place them
-                  </p>
-                </div>
-              )}
-              {orders.length > 5 && (
-                <div className="mt-4 flex justify-center">
-                  <Button
-                    variant="outline"
-                    onClick={() => router.push("/admin/orders")}
-                  >
-                    View All Orders
-                    <ArrowUpRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="products" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Your Products</CardTitle>
-              <CardDescription>
-                Manage your store inventory and products
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="flex h-40 items-center justify-center">
-                  <p>Loading products...</p>
-                </div>
-              ) : products.length > 0 ? (
-                <div className="space-y-4">
-                  {products.slice(0, 5).map((product) => (
-                    <div key={product.id} className="rounded-lg border p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div>
-                          <h3 className="font-medium">{product.name}</h3>
-                          <p className="text-sm text-muted-foreground line-clamp-1">
-                            {product.description}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge
-                            variant="outline"
-                            className={
-                              product.stock > 0
-                                ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
-                            }
-                          >
-                            {product.stock > 0
-                              ? `In Stock: ${product.stock}`
-                              : "Out of Stock"}
-                          </Badge>
-                          <span className="font-medium">
-                            ${product.price.toFixed(2)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex h-40 flex-col items-center justify-center">
-                  <p className="text-muted-foreground">No products found</p>
-                  <p className="text-sm text-muted-foreground">
-                    Add products to your store to see them here
-                  </p>
-                </div>
-              )}
-              <div className="mt-4 flex justify-between">
-                <Button onClick={() => router.push("/admin/products/new")}>
-                  Add New Product
-                </Button>
-                {products.length > 5 && (
-                  <Button
-                    variant="outline"
-                    onClick={() => router.push("/admin/products")}
-                  >
-                    View All Products
-                    <ArrowUpRight className="ml-2 h-4 w-4" />
-                  </Button>
-                )}
+                <span className="text-sm font-medium">{pendingOrders}</span>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-blue-500" />
+                  <span className="text-sm">Confirmed</span>
+                </div>
+                <span className="text-sm font-medium">{confirmedOrders}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-purple-500" />
+                  <span className="text-sm">In Transit</span>
+                </div>
+                <span className="text-sm font-medium">{inTransitOrders}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-green-500" />
+                  <span className="text-sm">Delivered</span>
+                </div>
+                <span className="text-sm font-medium">{deliveredOrders}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-red-500" />
+                  <span className="text-sm">Cancelled</span>
+                </div>
+                <span className="text-sm font-medium">{cancelledOrders}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2">
+          <CardHeader className="p-4 pb-0">
+            <CardTitle className="text-sm font-medium">Recent Orders</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4">
+            <ScrollArea className="h-[200px]">
+              <div className="space-y-4">
+                {orders.slice(0, 5).map((order) => (
+                  <div
+                    key={order.id}
+                    className="flex items-center justify-between rounded-lg border p-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
+                        <Package className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Order #{order.id}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant="outline"
+                        className={
+                          order.status === "delivered"
+                            ? "bg-green-50 text-green-700 border-green-200"
+                            : order.status === "in-transit"
+                            ? "bg-purple-50 text-purple-700 border-purple-200"
+                            : order.status === "confirmed"
+                            ? "bg-blue-50 text-blue-700 border-blue-200"
+                            : order.status === "cancelled"
+                            ? "bg-red-50 text-red-700 border-red-200"
+                            : "bg-yellow-50 text-yellow-700 border-yellow-200"
+                        }
+                      >
+                        {order.status}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => router.push(`/admin/orders/${order.id}`)}
+                      >
+                        <ArrowUpRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

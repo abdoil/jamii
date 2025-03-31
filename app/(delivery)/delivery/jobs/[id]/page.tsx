@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -37,43 +36,11 @@ import {
   ShoppingBag,
   Route,
 } from "lucide-react";
+import { useGetBids, useCreateBid, type Bid } from "@/lib/hooks/use-bids";
+import { useGetOrder } from "@/lib/hooks/use-order";
 
-// Mock job data
-const getJobData = (id: string) => ({
-  id,
-  orderId: `ORD-${id.substring(4)}`,
-  storeId: "1",
-  storeName: "Jamii Supermarket",
-  storeLocation: "Koinange Street, Nairobi",
-  customerLocation: "456 Park Ave, Uptown",
-  distance: "3.5 km",
-  items: 4,
-  weight: "5.2 kgs",
-  estimatedEarning: "5.00-8.00",
-  postedAt: new Date(Date.now() - 3600000).toISOString(),
-  deadline: new Date(Date.now() + 7200000).toISOString(),
-  status: "open",
-  bids: [
-    {
-      id: "bid-1",
-      deliveryAgentId: "3",
-      deliveryAgentName: "Mike Swift",
-      amount: 6.5,
-      estimatedDeliveryTime: new Date(Date.now() + 5400000).toISOString(),
-      status: "pending",
-    },
-    {
-      id: "bid-2",
-      deliveryAgentId: "4",
-      deliveryAgentName: "Lisa Quick",
-      amount: 7.25,
-      estimatedDeliveryTime: new Date(Date.now() + 4800000).toISOString(),
-      status: "pending",
-    },
-  ],
-});
-
-function maskName(name: string): string {
+function maskName(name?: string): string {
+  if (!name) return "Delivery Agent - 2"; // Default value if name is missing
   const parts = name.split(" ");
   return parts.map((part) => part[0] + "*".repeat(part.length - 1)).join(" ");
 }
@@ -86,12 +53,22 @@ export default function JobDetailPage({
   const resolvedParams = use(params);
   const { user } = useAuth();
   const router = useRouter();
-
   const [isLoading, setIsLoading] = useState(true);
-  const [job, setJob] = useState<any>(null);
+  const [order, setOrder] = useState<any>(null);
   const [bidAmount, setBidAmount] = useState("6.50");
   const [estimatedTime, setEstimatedTime] = useState("60");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Fetch order details
+  const { data: orderData, isLoading: isOrderLoading } = useGetOrder(
+    resolvedParams.id
+  );
+  // Fetch bids for this order
+  const { data: bids, isLoading: isBidsLoading } = useGetBids(
+    resolvedParams.id
+  );
+  // Create bid mutation
+  const createBid = useCreateBid();
 
   useEffect(() => {
     if (!user) {
@@ -104,43 +81,45 @@ export default function JobDetailPage({
       return;
     }
 
-    // Simulate loading job data
-    setIsLoading(true);
-    setTimeout(() => {
-      setJob(getJobData(resolvedParams.id));
-      setIsLoading(false);
-    }, 1000);
-  }, [user, router, resolvedParams.id]);
+    if (orderData) {
+      setOrder(orderData);
+    }
+  }, [user, router, orderData]);
 
   const handleSubmitBid = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await createBid.mutateAsync({
+        orderId: resolvedParams.id,
+        amount: Number(bidAmount),
+        estimatedDeliveryTime: new Date(
+          Date.now() + Number.parseInt(estimatedTime) * 60000
+        ).toISOString(),
+      });
 
       toast.success(
         `Your bid of KES ${bidAmount} has been submitted for job #${resolvedParams.id}`
       );
 
       // Update the job with the new bid
-      setJob((prev: any) => ({
-        ...prev,
-        bids: [
-          ...prev.bids,
-          {
-            id: `bid-${Date.now()}`,
-            deliveryAgentId: user?.id,
-            deliveryAgentName: user?.name,
-            amount: Number.parseFloat(bidAmount),
-            estimatedDeliveryTime: new Date(
-              Date.now() + Number.parseInt(estimatedTime) * 60000
-            ).toISOString(),
-            status: "pending",
-          },
-        ],
-      }));
+      // setJob((prev: any) => ({
+      //   ...prev,
+      //   bids: [
+      //     ...prev.bids,
+      //     {
+      //       id: `bid-${Date.now()}`,
+      //       deliveryAgentId: user?.id,
+      //       deliveryAgentName: user?.name,
+      //       amount: Number.parseFloat(bidAmount),
+      //       estimatedDeliveryTime: new Date(
+      //         Date.now() + Number.parseInt(estimatedTime) * 60000
+      //       ).toISOString(),
+      //       status: "pending",
+      //     },
+      //   ],
+      // }));
     } catch (error) {
       toast.error("Failed to submit bid. Please try again.");
     } finally {
@@ -148,7 +127,7 @@ export default function JobDetailPage({
     }
   };
 
-  if (isLoading) {
+  if (isOrderLoading || isBidsLoading) {
     return (
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
@@ -221,7 +200,7 @@ export default function JobDetailPage({
     );
   }
 
-  if (!job) {
+  if (!order) {
     return (
       <div className="flex h-[60vh] flex-col items-center justify-center">
         <AlertCircle className="h-10 w-10 text-muted-foreground mb-3" />
@@ -237,10 +216,11 @@ export default function JobDetailPage({
   }
 
   // Check if user has already bid on this job
-  const userBid = job.bids.find((bid: any) => bid.deliveryAgentId === user?.id);
+  const userBid = bids?.find((bid) => bid.deliveryAgentId === user?.id);
 
-  // Calculate time remaining until deadline
-  const deadlineDate = new Date(job.deadline);
+  // Calculate time remaining until deadline (30 minutes from order creation)
+  const orderDate = new Date(order.createdAt);
+  const deadlineDate = new Date(orderDate.getTime() + 30 * 60 * 1000);
   const now = new Date();
   const timeRemaining = deadlineDate.getTime() - now.getTime();
   const hoursRemaining = Math.floor(timeRemaining / (1000 * 60 * 60));
@@ -267,7 +247,7 @@ export default function JobDetailPage({
               variant="outline"
               className="bg-blue-50 text-blue-700 border-blue-200 text-xs"
             >
-              Open for Bids
+              {order.status}
             </Badge>
           </div>
         </div>
@@ -288,7 +268,9 @@ export default function JobDetailPage({
                 <div className="flex items-center gap-1 text-xs">
                   <Timer className="h-3.5 w-3.5 text-amber-500" />
                   <span className="font-medium text-amber-600">
-                    {hoursRemaining}h {minutesRemaining}m remaining
+                    {order.status === "delivered"
+                      ? "Delivered"
+                      : `${hoursRemaining}h ${minutesRemaining}m remaining`}
                   </span>
                 </div>
               </div>
@@ -304,9 +286,9 @@ export default function JobDetailPage({
                     <span className="text-xs font-medium">Pickup Location</span>
                   </div>
                   <div className="ml-7.5 space-y-0.5">
-                    <p className="text-sm font-medium">{job.storeName}</p>
+                    <p className="text-sm font-medium">{order.storeName}</p>
                     <p className="text-xs text-muted-foreground">
-                      {job.storeLocation}
+                      {order.storeLocation}
                     </p>
                   </div>
                 </div>
@@ -323,7 +305,7 @@ export default function JobDetailPage({
                   <div className="ml-7.5 space-y-0.5">
                     <p className="text-sm font-medium">Customer Address</p>
                     <p className="text-xs text-muted-foreground">
-                      {job.customerLocation}
+                      {order.deliveryAddress}
                     </p>
                   </div>
                 </div>
@@ -334,26 +316,30 @@ export default function JobDetailPage({
                 <div className="flex flex-col items-center justify-center rounded-lg border p-2 bg-muted/5">
                   <ShoppingBag className="h-4 w-4 text-muted-foreground mb-0.5" />
                   <span className="text-xs font-medium">Items</span>
-                  <span className="text-sm font-bold">{job.items}</span>
+                  <span className="text-sm font-bold">
+                    {order.products.length}
+                  </span>
                 </div>
 
                 <div className="flex flex-col items-center justify-center rounded-lg border p-2 bg-muted/5">
                   <Package className="h-4 w-4 text-muted-foreground mb-0.5" />
-                  <span className="text-xs font-medium">Weight</span>
-                  <span className="text-sm font-bold">{job.weight}</span>
+                  <span className="text-xs font-medium">Total Amount</span>
+                  <span className="text-sm font-bold">
+                    KES {order.totalAmount.toFixed(2)}
+                  </span>
                 </div>
 
                 <div className="flex flex-col items-center justify-center rounded-lg border p-2 bg-muted/5">
                   <Route className="h-4 w-4 text-muted-foreground mb-0.5" />
                   <span className="text-xs font-medium">Distance</span>
-                  <span className="text-sm font-bold">{job.distance}</span>
+                  <span className="text-sm font-bold">3.5 km</span>
                 </div>
 
                 <div className="flex flex-col items-center justify-center rounded-lg border p-2 bg-muted/5">
                   <Calendar className="h-4 w-4 text-muted-foreground mb-0.5" />
                   <span className="text-xs font-medium">Posted</span>
                   <span className="text-xs font-medium">
-                    {new Date(job.postedAt).toLocaleDateString()}
+                    {new Date(order.createdAt).toLocaleDateString()}
                   </span>
                 </div>
               </div>
@@ -367,7 +353,7 @@ export default function JobDetailPage({
                 <div>
                   <CardTitle className="text-base">Current Bids</CardTitle>
                   <CardDescription className="text-xs">
-                    {job.bids.length} bids from delivery agents
+                    {bids?.length || 0} bids from delivery agents
                   </CardDescription>
                 </div>
                 {userBid && (
@@ -381,10 +367,10 @@ export default function JobDetailPage({
               </div>
             </CardHeader>
             <CardContent className="p-3">
-              {job.bids.length > 0 ? (
+              {bids && bids.length > 0 ? (
                 <ScrollArea className="max-h-[350px] pr-3">
                   <div className="space-y-2.5 pb-1">
-                    {job.bids.map((bid: any) => (
+                    {bids.map((bid) => (
                       <div
                         key={bid.id}
                         className={`rounded-lg border p-2.5 ${
@@ -419,7 +405,7 @@ export default function JobDetailPage({
                             variant="outline"
                             className="bg-yellow-50 text-yellow-700 border-yellow-200 text-xs"
                           >
-                            Pending
+                            {bid.status}
                           </Badge>
                         </div>
 
@@ -484,7 +470,7 @@ export default function JobDetailPage({
             <CardContent className="p-3">
               <div className="flex flex-col items-center justify-center rounded-lg border p-3 bg-muted/5">
                 <div className="text-xl font-bold text-green-600">
-                  KES {job.estimatedEarning}
+                  KES {Number(order.totalAmount.toFixed(0)) / 3}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Based on distance and items
@@ -559,6 +545,7 @@ export default function JobDetailPage({
                         type="number"
                         step="0.01"
                         min="1"
+                        max={Number(order.totalAmount.toFixed(0))}
                         value={bidAmount}
                         onChange={(e) => setBidAmount(e.target.value)}
                         className="pl-7 h-8 text-sm"
@@ -566,7 +553,8 @@ export default function JobDetailPage({
                       />
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Suggested range: KES {job.estimatedEarning}
+                      Suggested range: KES{" "}
+                      {Number(order.totalAmount.toFixed(0)) / 3}
                     </p>
                   </div>
 

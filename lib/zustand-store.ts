@@ -20,24 +20,45 @@ export type OrderStatus =
   | "delivered"
   | "cancelled";
 
-export type Order = {
+export interface Order {
   id: string;
   customerId: string;
-  storeId: string;
-  deliveryAgentId?: string;
-  products: { productId: string; quantity: number }[];
-  status: OrderStatus;
+  products: {
+    productId: string;
+    quantity: number;
+  }[];
   totalAmount: number;
+  status: OrderStatus;
   createdAt: string;
   updatedAt: string;
   deliveryAddress: string;
-  trackingInfo?: {
-    location: string;
-    timestamp: string;
-    status: string;
-    estimatedDelivery?: string;
+  deliveryAgentId?: string;
+  deliveryFee?: number;
+  deliveryCode?: string;
+  transactionId?: string; // Transaction ID for order placement
+  bidTransactionId?: string; // Transaction ID for bid acceptance
+  deliveryTransactionId?: string; // Transaction ID for delivery confirmation
+  hashscanUrl?: string; // URL to view transaction on Hashscan
+  transactions: {
+    orderPlaced: {
+      amount: number;
+      timestamp: string;
+      transactionId: string;
+    };
+    bidPlaced?: {
+      amount: number;
+      timestamp: string;
+      transactionId: string;
+      deliveryAgentId: string;
+    };
+    deliveryConfirmed?: {
+      amount: number;
+      timestamp: string;
+      transactionId: string;
+      deliveryAgentId: string;
+    };
   };
-};
+}
 
 export type DeliveryBid = {
   id: string;

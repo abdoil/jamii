@@ -34,19 +34,23 @@ export async function GET(
     // Check authorization
     // Admins can see all orders
     // Users can only see their own orders
+    // Delivery agents can see orders they can bid on or are assigned to
     if (
-      session.user.role !== "admin" &&
-      orderData.customerId !== session.user.id
+      session.user.role === "admin" ||
+      orderData.customerId === session.user.id ||
+      (session.user.role === "delivery" &&
+        (orderData.status === "pending" ||
+          orderData.deliveryAgentId === session.user.id))
     ) {
-      console.log("User not authorized to view this order"); // Debug log
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      // Return the order data with its ID
+      return NextResponse.json({
+        id: orderSnap.id,
+        ...orderData,
+      });
     }
 
-    // Return the order data with its ID
-    return NextResponse.json({
-      id: orderSnap.id,
-      ...orderData,
-    });
+    console.log("User not authorized to view this order"); // Debug log
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   } catch (error) {
     console.error("Error fetching order:", error);
     return NextResponse.json(

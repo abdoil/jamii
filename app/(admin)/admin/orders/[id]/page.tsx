@@ -37,6 +37,8 @@ import {
 import { use } from "react";
 import { useOrdersStore, useProductsStore } from "@/lib/zustand-store";
 import { useQuery } from "@tanstack/react-query";
+import { useGetBids } from "@/lib/hooks/use-bids";
+import { useContract } from "@/lib/hooks/use-contract";
 
 // Mock delivery bids
 const deliveryBids = [
@@ -80,11 +82,15 @@ export default function AdminOrderDetailPage({
   const resolvedParams = use(params);
   const { user } = useAuth();
   const router = useRouter();
+  const { placeBid, confirmDelivery } = useContract();
 
-  const { data: order, isLoading: isOrderLoading } = useGetOrder(
-    resolvedParams.id
-  );
+  const {
+    data: order,
+    isLoading: isOrderLoading,
+    refetch: refetchOrder,
+  } = useGetOrder(resolvedParams.id);
   const { data: products, isLoading: isProductsLoading } = useGetProducts();
+  const { data: bids } = useGetBids(resolvedParams.id);
   const updateOrderStatus = useUpdateOrderStatus();
 
   const orderProducts =
@@ -125,18 +131,50 @@ export default function AdminOrderDetailPage({
 
   const handleAcceptBid = async (bidId: string) => {
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // First, accept the bid through the API
+      const response = await fetch(
+        `/api/orders/${resolvedParams.id}/bids/${bidId}/accept`,
+        {
+          method: "POST",
+        }
+      );
 
-      const acceptedBid = deliveryBids.find((bid) => bid.id === bidId);
-      if (acceptedBid && order) {
-        order.status = "confirmed";
-        order.deliveryAgentId = acceptedBid.deliveryAgentId;
+      if (!response.ok) {
+        throw new Error("Failed to accept bid");
       }
 
+      // Then, interact with the smart contract
+      await placeBid.mutateAsync({
+        orderId: resolvedParams.id,
+        amount: order?.deliveryFee || 0,
+      });
+
+      // Refresh order data
+      await refetchOrder();
       toast.success("Delivery agent has been assigned to this order");
     } catch (error) {
       toast.error("Failed to accept bid");
+      console.error("Error accepting bid:", error);
+    }
+  };
+
+  const handleConfirmDelivery = async () => {
+    try {
+      // First, update the order status through the API
+      await updateOrderStatus.mutateAsync({
+        orderId: resolvedParams.id,
+        status: "delivered",
+      });
+
+      // Then, interact with the smart contract
+      await confirmDelivery.mutateAsync(resolvedParams.id);
+
+      // Refresh order data
+      await refetchOrder();
+      toast.success("Delivery confirmed successfully");
+    } catch (error) {
+      toast.error("Failed to confirm delivery");
+      console.error("Error confirming delivery:", error);
     }
   };
 
@@ -308,15 +346,9 @@ export default function AdminOrderDetailPage({
                           : "Awaiting Confirmation"}
                       </p>
                     </div>
-                    {order.trackingInfo && (
+                    {order.deliveryAgentId && (
                       <div className="mt-2 text-sm text-muted-foreground">
-                        <p>
-                          Last update:{" "}
-                          {new Date(
-                            order.trackingInfo.timestamp
-                          ).toLocaleString()}
-                        </p>
-                        <p>{order.trackingInfo.status}</p>
+                        <p>Delivery Agent ID: {order.deliveryAgentId}</p>
                       </div>
                     )}
                   </div>
@@ -331,15 +363,13 @@ export default function AdminOrderDetailPage({
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4 text-muted-foreground" />
-                      <p className="font-medium">{customer.name}</p>
+                      <p className="font-medium">{order.customerId}</p>
                     </div>
-                    <p className="text-sm">{customer.email}</p>
-                    <p className="text-sm">{customer.phone}</p>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Calendar className="h-3 w-3" />
                       <p>
-                        Customer since{" "}
-                        {new Date(customer.joinedDate).toLocaleDateString()}
+                        Order placed on{" "}
+                        {new Date(order.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -373,7 +403,7 @@ export default function AdminOrderDetailPage({
             </CardFooter>
           </Card>
 
-          {order.status === "pending" && deliveryBids.length > 0 && (
+          {order.status === "pending" && bids && bids.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle>Delivery Bids</CardTitle>
@@ -383,7 +413,7 @@ export default function AdminOrderDetailPage({
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {deliveryBids.map((bid) => (
+                  {bids.map((bid) => (
                     <div
                       key={bid.id}
                       className="flex items-center justify-between rounded-lg border p-4"
@@ -392,7 +422,7 @@ export default function AdminOrderDetailPage({
                         <div className="flex items-center gap-2">
                           <User className="h-4 w-4 text-muted-foreground" />
                           <span className="font-medium">
-                            {bid.deliveryAgentName}
+                            Delivery Agent {bid.deliveryAgentId}
                           </span>
                         </div>
                         <div className="mt-2 space-y-1 text-sm">
@@ -442,12 +472,12 @@ export default function AdminOrderDetailPage({
                 </div>
                 <div className="flex justify-between">
                   <span>Delivery Fee</span>
-                  <span>KES 5.00</span>
+                  <span>KES {(order.totalAmount * 0.1).toFixed(2)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-medium">
                   <span>Total</span>
-                  <span>KES {(order.totalAmount + 5).toFixed(2)}</span>
+                  <span>KES {(order.totalAmount * 1.1).toFixed(2)}</span>
                 </div>
               </div>
             </CardContent>
@@ -494,11 +524,7 @@ export default function AdminOrderDetailPage({
                     <div>
                       <p className="font-medium">In Transit</p>
                       <p className="text-sm text-muted-foreground">
-                        {order.trackingInfo
-                          ? new Date(
-                              order.trackingInfo.timestamp
-                            ).toLocaleString()
-                          : "N/A"}
+                        {new Date(order.updatedAt).toLocaleString()}
                       </p>
                     </div>
                   </div>
@@ -512,11 +538,7 @@ export default function AdminOrderDetailPage({
                     <div>
                       <p className="font-medium">Delivered</p>
                       <p className="text-sm text-muted-foreground">
-                        {order.trackingInfo
-                          ? new Date(
-                              order.trackingInfo.timestamp
-                            ).toLocaleString()
-                          : "N/A"}
+                        {new Date(order.updatedAt).toLocaleString()}
                       </p>
                     </div>
                   </div>
@@ -525,26 +547,123 @@ export default function AdminOrderDetailPage({
             </CardContent>
           </Card>
 
-          {order.status === "confirmed" && (
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>Pickup QR Code</CardTitle>
-                <CardDescription>
-                  Show this QR code to the delivery agent for scanning when they
-                  pick up the order
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex justify-center">
-                <QRGenerator
-                  value={generateQRCodeData(order.id, "pickup")}
-                  title="Pickup Verification"
-                  description={`Order ${order.id}`}
-                />
-              </CardContent>
-            </Card>
-          )}
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Transaction Details</CardTitle>
+              <CardDescription>
+                View blockchain transaction information
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {order.bidTransactionId && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Package className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">Bid Transaction</span>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          navigator.clipboard.writeText(
+                            order.bidTransactionId || ""
+                          );
+                          toast.success("Transaction ID copied to clipboard");
+                        }}
+                      >
+                        Copy ID
+                      </Button>
+                    </div>
+                    <div className="text-sm text-muted-foreground break-all">
+                      {order.bidTransactionId}
+                    </div>
+                  </div>
+                )}
+                {order.deliveryTransactionId && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Truck className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">
+                          Delivery Transaction
+                        </span>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            navigator.clipboard.writeText(
+                              order.deliveryTransactionId || ""
+                            );
+                            toast.success("Transaction ID copied to clipboard");
+                          }}
+                        >
+                          Copy ID
+                        </Button>
+                        {order.hashscanUrl && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              window.open(order.hashscanUrl, "_blank")
+                            }
+                          >
+                            View on Hashscan
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-sm text-muted-foreground break-all">
+                      {order.deliveryTransactionId}
+                    </div>
+                  </div>
+                )}
+                {!order.bidTransactionId && !order.deliveryTransactionId && (
+                  <div className="text-sm text-muted-foreground">
+                    No blockchain transactions recorded yet
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Order Actions</CardTitle>
+          <CardDescription>Manage order status and delivery</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-4">
+            {order.status === "confirmed" && (
+              <Button
+                onClick={handleConfirmDelivery}
+                disabled={confirmDelivery.isLoading}
+                className="w-full"
+              >
+                {confirmDelivery.isLoading
+                  ? "Confirming Delivery..."
+                  : "Confirm Delivery"}
+              </Button>
+            )}
+            {order.status === "pending" &&
+              bids?.map((bid) => (
+                <Button
+                  key={bid.id}
+                  onClick={() => handleAcceptBid(bid.id)}
+                  disabled={placeBid.isLoading}
+                  className="w-full"
+                >
+                  {placeBid.isLoading ? "Accepting Bid..." : "Accept Bid"}
+                </Button>
+              ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

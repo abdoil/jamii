@@ -11,6 +11,7 @@ const nextConfig = {
     HEDERA_OPERATOR_ACCOUNT_ID: process.env.HEDERA_OPERATOR_ACCOUNT_ID,
     HEDERA_OPERATOR_PRIVATE_KEY: process.env.HEDERA_OPERATOR_PRIVATE_KEY,
     COINGECKO_API_KEY: process.env.COINGECKO_API_KEY,
+    CONTRACT_ID: process.env.CONTRACT_ID,
   },
   eslint: {
     ignoreDuringBuilds: true,

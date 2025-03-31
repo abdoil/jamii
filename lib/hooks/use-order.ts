@@ -16,14 +16,12 @@ interface OrderData {
   totalAmount: number;
   deliveryAddress: string;
   transactionId: string;
+  hashscanUrl: string;
+  blockchainStatus: string;
 }
 
 const createOrder = async (orderData: OrderData) => {
-  const orderWithTimestamp = {
-    ...orderData,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
+  console.log("Creating order with data:", orderData);
 
   const response = await fetch("/api/order/create", {
     method: "POST",
@@ -36,7 +34,7 @@ const createOrder = async (orderData: OrderData) => {
   const data = await response.json();
 
   if (!response.ok) {
-    console.error("API error response:", data); // Debug log
+    console.error("API error response:", data);
     throw new Error(data.error || "Failed to create order");
   }
 
@@ -49,14 +47,14 @@ export function useOrder() {
   return useMutation({
     mutationFn: createOrder,
     onSuccess: (data) => {
-      console.log("Order creation successful:", data); // Debug log
+      console.log("Order creation successful:", data);
       toast({
         title: "Order created successfully",
         description: `Order #${data.id} has been placed`,
       });
     },
     onError: (error: any) => {
-      console.error("Order creation error:", error); // Debug log
+      console.error("Order creation error:", error);
       toast({
         title: "Error creating order",
         description:
@@ -104,10 +102,30 @@ export function useUpdateOrderStatus() {
   });
 }
 
-// Get single order query
-export function useGetOrder(orderId: string) {
-  const { user } = useAuth();
+export type Order = {
+  id: string;
+  customerId: string;
+  storeId: string;
+  storeName: string;
+  storeLocation: string;
+  products: Array<{
+    productId: string;
+    quantity: number;
+    product?: {
+      id: string;
+      name: string;
+      price: number;
+    };
+  }>;
+  status: "pending" | "confirmed" | "in-transit" | "delivered" | "cancelled";
+  totalAmount: number;
+  deliveryAddress: string;
+  deliveryAgentId?: string;
+  createdAt: string;
+  updatedAt: string;
+};
 
+export function useGetOrder(orderId: string) {
   return useQuery({
     queryKey: ["order", orderId],
     queryFn: async () => {
@@ -115,9 +133,9 @@ export function useGetOrder(orderId: string) {
       if (!response.ok) {
         throw new Error("Failed to fetch order");
       }
-      return response.json();
+      return response.json() as Promise<Order>;
     },
-    enabled: !!user && user.role === "admin",
+    enabled: !!orderId,
   });
 }
 

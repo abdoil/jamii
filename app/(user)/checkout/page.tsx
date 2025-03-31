@@ -31,6 +31,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useContract } from "@/lib/hooks/use-contract";
+import { HbarConverter } from "@/components/hbar-converter";
 
 export default function CheckoutPage() {
   const [address, setAddress] = useState("");
@@ -42,16 +44,25 @@ export default function CheckoutPage() {
   const { user, isWalletConnected, connectWallet } = useAuth();
   const router = useRouter();
   const createOrder = useOrder();
+  const { placeOrder } = useContract();
 
   useEffect(() => {
-    if (items.length === 0) {
+    if (items.length === 0 && !isProcessing) {
       router.push("/shop");
     }
-  }, [items.length, router]);
+  }, [items.length, router, isProcessing]);
 
   if (items.length === 0) {
     return null;
   }
+
+  const convertKesToHbar = (kesAmount: number) => {
+    // 1 HBAR = 22 KES (approximate conversion rate)
+    // Convert to HBAR and then to tinybars (1 HBAR = 100,000,000 tinybars)
+    const hbarAmount = kesAmount / 22;
+    // Round to 8 decimal places to avoid floating point issues
+    return Math.round(hbarAmount * 100000000) / 100000000;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,17 +81,26 @@ export default function CheckoutPage() {
     setIsProcessing(true);
 
     try {
-      // Mock store wallet address
-      const storeWalletAddress = "0.0.123456";
+      const totalKes = getTotalPrice();
+      const hbarAmount = convertKesToHbar(totalKes);
 
-      // Create escrow payment
-      const transaction = await createEscrowPayment(
-        getTotalPrice(),
-        user.walletAddress!,
-        storeWalletAddress
-      );
+      // First, place the order on the blockchain
+      console.log("Placing order on blockchain with HBAR amount:", hbarAmount);
 
-      // Create order using React Query mutation
+      // Check if wallet is connected
+      if (!isWalletConnected) {
+        await connectWallet();
+      }
+
+      // Place order on blockchain
+      const contractResponse = await placeOrder.mutateAsync(hbarAmount);
+      console.log("Contract response:", contractResponse);
+
+      if (!contractResponse.success) {
+        throw new Error("Failed to place order on blockchain");
+      }
+
+      // Then, create the order in the database with the transaction details
       const orderData = {
         customerId: user.id,
         storeId: items[0].product.storeId,
@@ -89,13 +109,14 @@ export default function CheckoutPage() {
           quantity: item.quantity,
         })),
         status: "pending" as const,
-        totalAmount: getTotalPrice(),
+        totalAmount: totalKes,
         deliveryAddress: `${address}, ${city}, ${county}`,
-        transactionId: transaction.id,
+        transactionId: contractResponse.transactionId,
+        hashscanUrl: contractResponse.hashscanUrl,
+        blockchainStatus: "pending",
       };
 
-      console.log("Submitting order data:", orderData);
-
+      console.log("Creating order with data:", orderData);
       const order = await createOrder.mutateAsync(orderData);
       console.log("Order created successfully:", order);
 
@@ -196,11 +217,7 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="flex justify-end">
-                  <Button
-                    type="submit"
-                    size="lg"
-                    disabled={isProcessing || !isWalletConnected}
-                  >
+                  <Button type="submit" size="lg" disabled={isProcessing}>
                     {isProcessing ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -228,11 +245,11 @@ export default function CheckoutPage() {
                     <div>
                       <p className="font-medium">{item.product.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        {item.quantity} x ${item.product.price.toFixed(2)}
+                        {item.quantity} x KES {item.product.price.toFixed(2)}
                       </p>
                     </div>
                     <p className="font-medium">
-                      ${(item.quantity * item.product.price).toFixed(2)}
+                      KES {(item.quantity * item.product.price).toFixed(2)}
                     </p>
                   </div>
                 ))}
@@ -242,7 +259,7 @@ export default function CheckoutPage() {
             <CardFooter className="flex flex-col space-y-4 pt-4">
               <div className="flex w-full justify-between">
                 <span>Subtotal</span>
-                <span>${getTotalPrice().toFixed(2)}</span>
+                <span>KES {getTotalPrice().toFixed(2)}</span>
               </div>
               <div className="flex w-full justify-between">
                 <span>Delivery Fee</span>
@@ -250,8 +267,12 @@ export default function CheckoutPage() {
               </div>
               <Separator />
               <div className="flex w-full justify-between font-medium">
-                <span>Total</span>
-                <span>${getTotalPrice().toFixed(2)}</span>
+                <span>Total (KES)</span>
+                <span>KES {getTotalPrice().toFixed(2)}</span>
+              </div>
+              <div className="flex w-full justify-between text-sm text-muted-foreground">
+                <span>Total (HBAR)</span>
+                <HbarConverter amount={convertKesToHbar(getTotalPrice())} />
               </div>
               <div className="text-xs text-muted-foreground">
                 * Final price will include delivery fee determined by delivery

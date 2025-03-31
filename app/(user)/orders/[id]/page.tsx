@@ -46,44 +46,15 @@ interface OrderWithProducts extends Order {
     quantity: number;
     product?: Product;
   }[];
+  trackingInfo?: {
+    timestamp: string;
+    status: string;
+  };
+  blockchainStatus?: string;
+  hashscanUrl?: string;
+  transactionId?: string;
+  storeName?: string;
 }
-
-// Mock delivery bids - moved outside component to prevent recreation on each render
-const mockDeliveryBids = [
-  {
-    id: "bid-1",
-    orderId: "2",
-    deliveryAgentId: "3",
-    deliveryAgentName: "John Delivery",
-    rating: 4.8,
-    completedDeliveries: 156,
-    amount: 5.0,
-    estimatedDeliveryTime: "2023-05-15T14:00:00Z",
-    status: "pending",
-  },
-  {
-    id: "bid-2",
-    orderId: "2",
-    deliveryAgentId: "4",
-    deliveryAgentName: "Sarah Express",
-    rating: 4.9,
-    completedDeliveries: 243,
-    amount: 6.5,
-    estimatedDeliveryTime: "2023-05-15T13:30:00Z",
-    status: "pending",
-  },
-  {
-    id: "bid-3",
-    orderId: "2",
-    deliveryAgentId: "5",
-    deliveryAgentName: "Mike Swift",
-    rating: 4.6,
-    completedDeliveries: 98,
-    amount: 4.5,
-    estimatedDeliveryTime: "2023-05-15T15:00:00Z",
-    status: "pending",
-  },
-];
 
 // QR Code Generator Component
 function QRGenerator({
@@ -192,13 +163,13 @@ export default function OrderDetailsPage({
 
           // If order is pending, fetch delivery bids
           if (foundOrder.status === "pending") {
-            // In a real app, this would be an API call
-            // For now, we'll use mock data
-            setDeliveryBids(
-              mockDeliveryBids.filter(
-                (bid) => bid.orderId === resolvedParams.id
-              )
+            const bidsResponse = await fetch(
+              `/api/orders/${resolvedParams.id}/bids`
             );
+            if (bidsResponse.ok) {
+              const bids = await bidsResponse.json();
+              setDeliveryBids(bids);
+            }
           }
         } else {
           toast.error("Order not found");
@@ -227,8 +198,16 @@ export default function OrderDetailsPage({
   const handleSelectDeliveryAgent = useCallback(
     async (bidId: string) => {
       try {
-        // In a real app, this would be an API call
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const response = await fetch(
+          `/api/orders/${resolvedParams.id}/bids/${bidId}/accept`,
+          {
+            method: "POST",
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to accept bid");
+        }
 
         toast.success("Delivery agent selected");
 
@@ -252,7 +231,7 @@ export default function OrderDetailsPage({
         toast.error("Failed to select delivery agent");
       }
     },
-    [deliveryBids, order, toast]
+    [deliveryBids, order, toast, resolvedParams.id]
   );
 
   // Memoize the getStatusBadge function to prevent recreation on each render
@@ -489,7 +468,7 @@ export default function OrderDetailsPage({
                                       <svg
                                         key={i}
                                         className={`h-3 w-3 ${
-                                          i < Math.floor(bid.rating)
+                                          i < Math.floor(bid.rating || 0)
                                             ? "fill-yellow-400"
                                             : "fill-gray-300"
                                         }`}
@@ -500,7 +479,7 @@ export default function OrderDetailsPage({
                                       </svg>
                                     ))}
                                     <span className="ml-1">
-                                      {bid.rating.toFixed(1)}
+                                      {(bid.rating || 0).toFixed(1)}
                                     </span>
                                   </div>
                                 </div>
@@ -554,6 +533,54 @@ export default function OrderDetailsPage({
                   </div>
                 </CardContent>
               </Card>
+
+              {order.transactionId && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Blockchain Transaction</CardTitle>
+                    <CardDescription>
+                      View transaction details on Hashscan
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          Transaction ID
+                        </span>
+                        <span className="font-mono text-sm">
+                          {order.transactionId}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          Status
+                        </span>
+                        <Badge
+                          variant={
+                            order.blockchainStatus === "completed"
+                              ? "default"
+                              : "secondary"
+                          }
+                        >
+                          {order.blockchainStatus || "Pending"}
+                        </Badge>
+                      </div>
+                      {order.hashscanUrl && (
+                        <Button asChild variant="outline" className="w-full">
+                          <a
+                            href={order.hashscanUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            View on Hashscan
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               <Card>
                 <CardHeader>
@@ -630,22 +657,18 @@ export default function OrderDetailsPage({
               {order.status === "in-transit" && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Delivery QR Code</CardTitle>
+                    <CardTitle>Delivery Code</CardTitle>
                     <CardDescription>
-                      Show this QR code to the delivery agent when they deliver
-                      your order
+                      Share this code with your delivery agent to confirm
+                      delivery
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="flex justify-center">
-                    <QRGenerator
-                      value={JSON.stringify({
-                        orderId: order.id,
-                        type: "delivery",
-                        timestamp: Date.now(),
-                      })}
-                      title="Delivery Verification"
-                      description={`Order ${order.id}`}
-                    />
+                  <CardContent>
+                    <div className="flex items-center justify-center p-4 bg-muted rounded-lg">
+                      <span className="text-2xl font-bold tracking-wider">
+                        {order.deliveryCode}
+                      </span>
+                    </div>
                   </CardContent>
                 </Card>
               )}
