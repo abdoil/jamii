@@ -8,15 +8,7 @@ import {
   useProductsStore,
   type OrderStatus,
 } from "@/lib/zustand-store";
-import { AdminLayout } from "@/components/admin/admin-layout";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -32,18 +24,17 @@ import {
   PlusCircle,
   ArrowDownLeft,
   Coins,
-  Timer,
-  MapPin,
   ChevronRight,
-  Info,
-  Filter,
   CheckCircle2,
   AlertCircle,
+  BarChart3,
+  Menu,
 } from "lucide-react";
 import { useUpdateOrderStatus } from "@/lib/hooks/use-order";
 import { HbarConverter } from "@/components/hbar-converter";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AdminDashboardPage() {
   const { user } = useAuth();
@@ -51,6 +42,7 @@ export default function AdminDashboardPage() {
   const { products, fetchProducts } = useProductsStore();
   const updateOrderStatus = useUpdateOrderStatus();
   const [isLoading, setIsLoading] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -174,21 +166,35 @@ export default function AdminDashboardPage() {
     }
   };
 
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
+
   return (
-    <div className="flex flex-col gap-4 pb-20 md:pb-10">
+    <div className="flex flex-col gap-4 pb-20 md:pb-10 px-3 md:px-6">
       {/* Header with Wallet Summary */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight md:text-2xl">
-            Admin Dashboard
-          </h1>
-          <p className="text-xs text-muted-foreground md:text-sm">
-            Manage orders and track revenue
-          </p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mt-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold tracking-tight md:text-2xl">
+              Admin Dashboard
+            </h1>
+            <p className="text-xs text-muted-foreground md:text-sm">
+              Manage orders and track revenue
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
         </div>
 
         {/* Compact Wallet Summary */}
-        <div className="flex items-center gap-3 p-2 rounded-lg border bg-card">
+        <div className="flex items-center gap-3 p-2 rounded-lg border bg-card shadow-sm">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
               <Wallet className="h-3.5 w-3.5 text-primary" />
@@ -196,11 +202,11 @@ export default function AdminDashboardPage() {
             <div>
               <div className="flex items-baseline gap-1 text-sm">
                 <HbarConverter amount={Number(totalRevenue.toFixed(2))} />
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground hidden sm:inline">
                   (KES {totalRevenue.toLocaleString()})
                 </span>
               </div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-xs text-muted-foreground truncate max-w-[120px] sm:max-w-none">
                 ID: {user?.hederaAccountId}
               </div>
             </div>
@@ -295,9 +301,41 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
+      {/* Mobile Navigation Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden bg-background border rounded-lg shadow-sm p-4 mb-2">
+          <nav className="space-y-2">
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-left"
+              onClick={() => router.push("/admin/orders")}
+            >
+              <ShoppingCart className="mr-2 h-4 w-4" />
+              Orders
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-left"
+              onClick={() => router.push("/admin/products")}
+            >
+              <Package className="mr-2 h-4 w-4" />
+              Products
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-left"
+              onClick={() => router.push("/admin/analytics")}
+            >
+              <BarChart3 className="mr-2 h-4 w-4" />
+              Analytics
+            </Button>
+          </nav>
+        </div>
+      )}
+
       {/* Stats Overview */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Card className="border-l-4 border-l-primary">
+        <Card className="border-l-4 border-l-primary shadow-sm hover:shadow transition-shadow">
           <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
@@ -315,7 +353,7 @@ export default function AdminDashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-blue-500">
+        <Card className="border-l-4 border-l-blue-500 shadow-sm hover:shadow transition-shadow">
           <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
@@ -333,7 +371,7 @@ export default function AdminDashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-amber-500">
+        <Card className="border-l-4 border-l-amber-500 shadow-sm hover:shadow transition-shadow">
           <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
@@ -351,7 +389,7 @@ export default function AdminDashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-green-500">
+        <Card className="border-l-4 border-l-green-500 shadow-sm hover:shadow transition-shadow">
           <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
@@ -369,107 +407,180 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Order Status Overview */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-        <Card>
-          <CardHeader className="p-4 pb-0">
-            <CardTitle className="text-sm font-medium">Order Status</CardTitle>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <Card className="shadow-sm">
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="text-sm font-medium flex items-center">
+              <CheckCircle2 className="h-4 w-4 mr-2 text-primary" />
+              Order Status
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-4">
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-yellow-500" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-yellow-500" />
                   <span className="text-sm">Pending</span>
                 </div>
-                <span className="text-sm font-medium">{pendingOrders}</span>
+                <Badge
+                  variant="outline"
+                  className="bg-yellow-50 text-yellow-700"
+                >
+                  {pendingOrders}
+                </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-blue-500" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-blue-500" />
                   <span className="text-sm">Confirmed</span>
                 </div>
-                <span className="text-sm font-medium">{confirmedOrders}</span>
+                <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                  {confirmedOrders}
+                </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-purple-500" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-purple-500" />
                   <span className="text-sm">In Transit</span>
                 </div>
-                <span className="text-sm font-medium">{inTransitOrders}</span>
+                <Badge
+                  variant="outline"
+                  className="bg-purple-50 text-purple-700"
+                >
+                  {inTransitOrders}
+                </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-green-500" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-green-500" />
                   <span className="text-sm">Delivered</span>
                 </div>
-                <span className="text-sm font-medium">{deliveredOrders}</span>
+                <Badge variant="outline" className="bg-green-50 text-green-700">
+                  {deliveredOrders}
+                </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-red-500" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-red-500" />
                   <span className="text-sm">Cancelled</span>
                 </div>
-                <span className="text-sm font-medium">{cancelledOrders}</span>
+                <Badge variant="outline" className="bg-red-50 text-red-700">
+                  {cancelledOrders}
+                </Badge>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="md:col-span-2">
-          <CardHeader className="p-4 pb-0">
-            <CardTitle className="text-sm font-medium">Recent Orders</CardTitle>
+        <Card className="md:col-span-2 shadow-sm">
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="text-sm font-medium flex items-center justify-between">
+              <div className="flex items-center">
+                <Truck className="h-4 w-4 mr-2 text-primary" />
+                Recent Orders
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs h-8"
+                onClick={() => router.push("/admin/orders")}
+              >
+                View All
+              </Button>
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-4">
-            <ScrollArea className="h-[200px]">
-              <div className="space-y-4">
-                {orders.slice(0, 5).map((order) => (
-                  <div
-                    key={order.id}
-                    className="flex items-center justify-between rounded-lg border p-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
-                        <Package className="h-4 w-4" />
+            <ScrollArea className="h-[220px] pr-4">
+              <div className="space-y-3">
+                {orders.length > 0 ? (
+                  orders.slice(0, 5).map((order) => (
+                    <div
+                      key={order.id}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">
+                          <Package className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <p className="font-medium">
+                            Order #{order.id.substring(0, 8)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(order.createdAt).toLocaleDateString()} •
+                            KES {order.totalAmount.toLocaleString()}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium">Order #{order.id}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(order.createdAt).toLocaleDateString()}
-                        </p>
+                      <div className="flex items-center gap-2 mt-2 sm:mt-0">
+                        <Badge
+                          variant="outline"
+                          className={
+                            order.status === "delivered"
+                              ? "bg-green-50 text-green-700 border-green-200"
+                              : order.status === "in-transit"
+                              ? "bg-purple-50 text-purple-700 border-purple-200"
+                              : order.status === "confirmed"
+                              ? "bg-blue-50 text-blue-700 border-blue-200"
+                              : order.status === "cancelled"
+                              ? "bg-red-50 text-red-700 border-red-200"
+                              : "bg-yellow-50 text-yellow-700 border-yellow-200"
+                          }
+                        >
+                          {order.status}
+                        </Badge>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() =>
+                            router.push(`/admin/orders/${order.id}`)
+                          }
+                        >
+                          <ArrowUpRight className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant="outline"
-                        className={
-                          order.status === "delivered"
-                            ? "bg-green-50 text-green-700 border-green-200"
-                            : order.status === "in-transit"
-                            ? "bg-purple-50 text-purple-700 border-purple-200"
-                            : order.status === "confirmed"
-                            ? "bg-blue-50 text-blue-700 border-blue-200"
-                            : order.status === "cancelled"
-                            ? "bg-red-50 text-red-700 border-red-200"
-                            : "bg-yellow-50 text-yellow-700 border-yellow-200"
-                        }
-                      >
-                        {order.status}
-                      </Badge>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => router.push(`/admin/orders/${order.id}`)}
-                      >
-                        <ArrowUpRight className="h-4 w-4" />
-                      </Button>
-                    </div>
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-[180px] text-center">
+                    <AlertCircle className="h-10 w-10 text-muted-foreground mb-2" />
+                    <p className="text-muted-foreground">No orders found</p>
                   </div>
-                ))}
+                )}
               </div>
             </ScrollArea>
           </CardContent>
         </Card>
       </div>
+    </div>
+  );
+}
+
+// Loading skeleton for the dashboard
+function DashboardSkeleton() {
+  return (
+    <div className="flex flex-col gap-4 pb-20 md:pb-10 px-3 md:px-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mt-4">
+        <div>
+          <Skeleton className="h-8 w-48 mb-2" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+        <Skeleton className="h-12 w-48" />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} className="h-24 w-full" />
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-64 w-full md:col-span-2" />
+      </div>
+
+      <Skeleton className="h-32 w-full mt-2" />
     </div>
   );
 }
