@@ -97,10 +97,12 @@ export default function AdminDashboardPage() {
     (order) => order.status === "pending"
   ).length;
   const totalOrders = orders.length;
-  const totalRevenue = orders.reduce(
-    (sum, order) => sum + order.totalAmount,
-    0
-  );
+  const totalRevenue = orders.reduce((sum, order) => {
+    if (order.status === "delivered") {
+      return sum + order.totalAmount;
+    }
+    return sum;
+  }, 0);
   const totalProducts = products.length;
   const confirmedOrders = orders.filter(
     (order) => order.status === "confirmed"
@@ -114,17 +116,13 @@ export default function AdminDashboardPage() {
   const cancelledOrders = orders.filter(
     (order) => order.status === "cancelled"
   ).length;
-  const totalDeliveryFees = orders.reduce(
-    (sum, order) => sum + order.totalAmount * 0.1,
-    0
-  );
+  const totalDeliveryFees = orders.reduce((sum, order) => {
+    if (order.status === "delivered" && order.transactions?.bidPlaced?.amount) {
+      return sum + order.transactions.bidPlaced.amount;
+    }
+    return sum;
+  }, 0);
   const totalProfit = totalRevenue - totalDeliveryFees;
-
-  // Mock wallet balance (replace with actual data)
-  const walletBalance = {
-    hbar: 54.7,
-    kes: 5470, // 1 HBAR = 100 KES
-  };
 
   const getStatusBadge = (status: OrderStatus) => {
     switch (status) {
@@ -197,9 +195,9 @@ export default function AdminDashboardPage() {
             </div>
             <div>
               <div className="flex items-baseline gap-1 text-sm">
-                <HbarConverter amount={walletBalance.hbar} />
+                <HbarConverter amount={Number(totalRevenue.toFixed(2))} />
                 <span className="text-xs text-muted-foreground">
-                  (KES {walletBalance.kes.toLocaleString()})
+                  (KES {totalRevenue.toLocaleString()})
                 </span>
               </div>
               <div className="text-xs text-muted-foreground">
@@ -228,9 +226,9 @@ export default function AdminDashboardPage() {
                 <div className="rounded-lg border p-4 bg-muted/30">
                   <div className="text-sm font-medium">Available Balance</div>
                   <div className="mt-1">
-                    <HbarConverter amount={walletBalance.hbar} />
+                    <HbarConverter amount={Number(totalRevenue.toFixed(2))} />
                     <div className="text-sm text-muted-foreground">
-                      KES {walletBalance.kes.toLocaleString()}
+                      KES {totalRevenue.toLocaleString()}
                     </div>
                   </div>
                 </div>

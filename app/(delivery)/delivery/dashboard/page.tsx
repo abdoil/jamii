@@ -185,10 +185,12 @@ export default function DeliveryDashboardPage() {
   const completedDeliveries = orders.filter(
     (order) => order.status === "delivered"
   ).length;
-  const totalEarnings = orders.reduce(
-    (sum, order) => sum + order.totalAmount * 0.1,
-    0
-  ); // Assuming 10% of order value
+  const totalEarnings = orders.reduce((sum, order) => {
+    if (order.status === "delivered" && order.transactions?.bidPlaced?.amount) {
+      return sum + order.transactions.bidPlaced.amount;
+    }
+    return sum;
+  }, 0);
 
   const getStatusBadge = (status: OrderStatus) => {
     switch (status) {
@@ -261,7 +263,7 @@ export default function DeliveryDashboardPage() {
             </div>
             <div>
               <div className="flex items-baseline gap-1 text-sm">
-                <HbarConverter amount={54.7} />
+                <HbarConverter amount={Number(totalEarnings.toFixed(2))} />
               </div>
               <div className="text-xs text-muted-foreground">
                 ID: {user?.hederaAccountId}
@@ -289,7 +291,7 @@ export default function DeliveryDashboardPage() {
                 <div className="rounded-lg border p-4 bg-muted/30">
                   <div className="text-sm font-medium">Available Balance</div>
                   <div className="mt-1">
-                    <HbarConverter amount={54.7} />
+                    <HbarConverter amount={Number(totalEarnings.toFixed(2))} />
                   </div>
                 </div>
 
@@ -912,7 +914,10 @@ export default function DeliveryDashboardPage() {
                           </div>
                           <div className="text-right">
                             <div className="font-medium text-sm">
-                              KES {(order.totalAmount * 0.1).toFixed(2)}
+                              KES{" "}
+                              {order.transactions?.bidPlaced?.amount?.toFixed(
+                                2
+                              ) || "0.00"}
                             </div>
                             <div className="text-xs text-muted-foreground">
                               Earnings
