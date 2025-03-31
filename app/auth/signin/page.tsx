@@ -1,7 +1,9 @@
 "use client";
 
+import type React from "react";
+
 import { useState, useEffect } from "react";
-import { signIn, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/auth-provider";
@@ -18,12 +20,20 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [demoRole, setDemoRole] = useState("");
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
@@ -56,6 +66,29 @@ export default function SignIn() {
       }
     }
   }, [session, status, router, searchParams]);
+
+  // Handle demo credentials selection
+  useEffect(() => {
+    if (demoRole) {
+      // Set email based on selected role
+      switch (demoRole) {
+        case "store":
+          setEmail("store@example.com");
+          break;
+        case "delivery":
+          setEmail("delivery@example.com");
+          break;
+        case "customer":
+          setEmail("customer@example.com");
+          break;
+        default:
+          setEmail("");
+      }
+
+      // Set password for all demo accounts
+      setPassword("password123");
+    }
+  }, [demoRole]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,6 +131,24 @@ export default function SignIn() {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <div className="mb-4">
+          <Label htmlFor="demo-select">Demo Credentials</Label>
+          <Select onValueChange={setDemoRole} value={demoRole}>
+            <SelectTrigger id="demo-select" className="w-full">
+              <SelectValue placeholder="Select demo account" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              <SelectItem value="store">Store/Admin</SelectItem>
+              <SelectItem value="delivery">Delivery</SelectItem>
+              <SelectItem value="customer">Customer</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground mt-1">
+            Select a role to autofill demo credentials
+          </p>
+        </div>
+
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4">
             <div className="grid gap-2">

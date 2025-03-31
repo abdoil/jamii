@@ -130,10 +130,10 @@ export default function HomePage() {
                   size="lg"
                   className="h-12 px-6 bg-primary hover:bg-primary/80"
                 >
-                  <Link href="/auth/signup">Get Started</Link>
+                  <Link href="/auth/signin">Get Started</Link>
                 </Button>
                 <Button size="lg" variant="outline" className="h-12 px-6">
-                  <Link href="/auth/signup">Learn More</Link>
+                  <Link href="/auth/signin">Learn More</Link>
                 </Button>
               </div>
 
