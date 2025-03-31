@@ -227,24 +227,26 @@ export default function AdminOrderDetailPage({
         <div>
           <Link
             href="/admin/orders"
-            className="flex items-center text-sm text-muted-foreground hover:text-foreground"
+            className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Orders
           </Link>
-          <h1 className="mt-2 text-3xl font-bold">
+          <h1 className="mt-2 text-2xl md:text-3xl font-bold tracking-tight">
             Order #{resolvedParams.id}
           </h1>
         </div>
         {getStatusBadge(order.status)}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        <div className="md:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Order Details</CardTitle>
-              <CardDescription>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl font-semibold">
+                Order Details
+              </CardTitle>
+              <CardDescription className="text-sm">
                 Placed on {new Date(order.createdAt).toLocaleDateString()} at{" "}
                 {new Date(order.createdAt).toLocaleTimeString()}
               </CardDescription>
@@ -329,6 +331,175 @@ export default function AdminOrderDetailPage({
                       </p>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <h3 className="font-medium">Transaction Details</h3>
+                <div className="space-y-6">
+                  {order.transactionId && (
+                    <div className="space-y-3 rounded-lg border p-4 bg-muted/30">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <ShoppingBag className="h-4 w-4 text-primary" />
+                          <span className="font-medium text-sm">
+                            Order Placement
+                          </span>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs"
+                            onClick={() => {
+                              navigator.clipboard.writeText(
+                                order.transactionId || ""
+                              );
+                              toast.success(
+                                "Transaction ID copied to clipboard"
+                              );
+                            }}
+                          >
+                            Copy ID
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs"
+                            onClick={() =>
+                              window.open(
+                                `https://hashscan.io/testnet/tx/${order.transactionId}`,
+                                "_blank"
+                              )
+                            }
+                          >
+                            View on Hashscan
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="text-xs text-muted-foreground break-all bg-background p-2 rounded">
+                        {order.transactionId}
+                      </div>
+                    </div>
+                  )}
+                  {order.transactions?.bidPlaced && (
+                    <div className="space-y-3 rounded-lg border p-4 bg-muted/30">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <Package className="h-4 w-4 text-primary" />
+                          <span className="font-medium text-sm">
+                            Bid Transaction
+                          </span>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs"
+                            onClick={() => {
+                              navigator.clipboard.writeText(
+                                order.transactions?.bidPlaced?.transactionId ||
+                                  ""
+                              );
+                              toast.success(
+                                "Transaction ID copied to clipboard"
+                              );
+                            }}
+                          >
+                            Copy ID
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs"
+                            onClick={() =>
+                              window.open(
+                                `https://hashscan.io/testnet/tx/${
+                                  order.transactions?.bidPlaced
+                                    ?.transactionId || ""
+                                }`,
+                                "_blank"
+                              )
+                            }
+                          >
+                            View on Hashscan
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="text-xs text-muted-foreground break-all bg-background p-2 rounded">
+                        {order.transactions.bidPlaced.transactionId}
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Amount:</span>
+                        <span className="font-medium">
+                          KES {order.transactions.bidPlaced.amount}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  {order.status === "delivered" &&
+                    order.deliveryTransactionId && (
+                      <div className="space-y-3 rounded-lg border p-4 bg-muted/30">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <Truck className="h-4 w-4 text-primary" />
+                            <span className="font-medium text-sm">
+                              Delivery Transaction
+                            </span>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-xs"
+                              onClick={() => {
+                                navigator.clipboard.writeText(
+                                  order.deliveryTransactionId || ""
+                                );
+                                toast.success(
+                                  "Transaction ID copied to clipboard"
+                                );
+                              }}
+                            >
+                              Copy ID
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-xs"
+                              onClick={() =>
+                                window.open(
+                                  `https://hashscan.io/testnet/tx/${order.deliveryTransactionId}`,
+                                  "_blank"
+                                )
+                              }
+                            >
+                              View on Hashscan
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="text-xs text-muted-foreground break-all bg-background p-2 rounded">
+                          {order.deliveryTransactionId}
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">
+                            Delivery Fee:
+                          </span>
+                          <span className="font-medium">
+                            KES {order.deliveryFee}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  {!order.transactionId &&
+                    !order.transactions?.bidPlaced &&
+                    !order.deliveryTransactionId && (
+                      <div className="text-sm text-muted-foreground text-center py-4">
+                        No blockchain transactions recorded yet
+                      </div>
+                    )}
                 </div>
               </div>
             </CardContent>
@@ -499,157 +670,6 @@ export default function AdminOrderDetailPage({
                     </div>
                   </div>
                 )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Transaction Details</CardTitle>
-              <CardDescription>
-                View blockchain transaction information
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {order.transactionId && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">Order Placement</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            navigator.clipboard.writeText(
-                              order.transactionId || ""
-                            );
-                            toast.success("Transaction ID copied to clipboard");
-                          }}
-                        >
-                          Copy ID
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            window.open(
-                              `https://hashscan.io/testnet/tx/${order.transactionId}`,
-                              "_blank"
-                            )
-                          }
-                        >
-                          View on Hashscan
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="text-sm text-muted-foreground break-all">
-                      {order.transactionId}
-                    </div>
-                  </div>
-                )}
-                {order.transactions?.bidPlaced && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Package className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">Bid Transaction</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            navigator.clipboard.writeText(
-                              order.transactions?.bidPlaced?.transactionId || ""
-                            );
-                            toast.success("Transaction ID copied to clipboard");
-                          }}
-                        >
-                          Copy ID
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            window.open(
-                              `https://hashscan.io/testnet/tx/${
-                                order.transactions?.bidPlaced?.transactionId ||
-                                ""
-                              }`,
-                              "_blank"
-                            )
-                          }
-                        >
-                          View on Hashscan
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="text-sm text-muted-foreground break-all">
-                      {order.transactions.bidPlaced.transactionId}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Amount: KES {order.transactions.bidPlaced.amount}
-                    </div>
-                  </div>
-                )}
-                {order.status === "delivered" &&
-                  order.deliveryTransactionId && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Truck className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">
-                            Delivery Transaction
-                          </span>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              navigator.clipboard.writeText(
-                                order.deliveryTransactionId || ""
-                              );
-                              toast.success(
-                                "Transaction ID copied to clipboard"
-                              );
-                            }}
-                          >
-                            Copy ID
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              window.open(
-                                `https://hashscan.io/testnet/tx/${order.deliveryTransactionId}`,
-                                "_blank"
-                              )
-                            }
-                          >
-                            View on Hashscan
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="text-sm text-muted-foreground break-all">
-                        {order.deliveryTransactionId}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        Delivery Fee: KES {order.deliveryFee}
-                      </div>
-                    </div>
-                  )}
-                {!order.transactionId &&
-                  !order.transactions?.bidPlaced &&
-                  !order.deliveryTransactionId && (
-                    <div className="text-sm text-muted-foreground">
-                      No blockchain transactions recorded yet
-                    </div>
-                  )}
               </div>
             </CardContent>
           </Card>
